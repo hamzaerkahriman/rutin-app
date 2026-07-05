@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { PrimaryButton, SectionTitle } from '../../src/components/ui';
+import { elevatedStyle, PrimaryButton, SectionTitle } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { TASK_PRIORITY_LABELS, TaskPriority } from '../../src/types';
@@ -131,7 +131,10 @@ export default function CreateTaskScreen() {
           placeholderTextColor={theme.textMuted}
           style={[styles.input, { flex: 1, marginBottom: 0, borderColor: theme.border, color: theme.text }]}
         />
-        <Pressable onPress={handleAddTag} style={[styles.addTagButton, { backgroundColor: theme.accent }]}>
+        <Pressable
+          onPress={handleAddTag}
+          style={({ pressed }) => [styles.addTagButton, { backgroundColor: theme.accent }, elevatedStyle(pressed)]}
+        >
           <Text style={{ color: theme.accentText, fontWeight: '700' }}>Ekle</Text>
         </Pressable>
       </View>

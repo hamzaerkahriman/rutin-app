@@ -11,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { EmptyState } from '../../src/components/ui';
+import { elevatedCircleStyle, EmptyState } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 
@@ -136,7 +136,11 @@ export default function ConversationScreen() {
           testID="message-send-button"
           onPress={handleSend}
           disabled={!draft.trim() || sending}
-          style={[styles.sendBtn, { backgroundColor: theme.accent, opacity: !draft.trim() || sending ? 0.5 : 1 }]}
+          style={({ pressed }) => [
+            styles.sendBtn,
+            { backgroundColor: theme.accent, opacity: !draft.trim() || sending ? 0.5 : 1 },
+            draft.trim() && !sending && elevatedCircleStyle(pressed),
+          ]}
         >
           <Ionicons name="send" size={16} color={theme.accentText} />
         </Pressable>

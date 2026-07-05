@@ -4,6 +4,33 @@ import { priorityColors, statusColors } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TaskPriority, TaskStatus } from '../types';
 
+// Basılabilir öğelere "3D tuş" hissi veren gölge/basma stilleri — tek yerden
+// ayarlanabilsin diye tüm dolu-renkli butonlar (PrimaryButton ve app genelindeki
+// küçük "Ekle"/gönder/oynat butonları) bu iki yardımcıyı paylaşıyor.
+export function elevatedStyle(pressed: boolean): ViewStyle {
+  return {
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0,0,0,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+    shadowOpacity: pressed ? 0.1 : 0.22,
+    shadowRadius: pressed ? 3 : 8,
+    elevation: pressed ? 1 : 5,
+    transform: [{ translateY: pressed ? 2 : 0 }],
+  };
+}
+
+export function elevatedCircleStyle(pressed: boolean): ViewStyle {
+  return {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+    shadowOpacity: pressed ? 0.1 : 0.25,
+    shadowRadius: pressed ? 2 : 6,
+    elevation: pressed ? 1 : 4,
+    transform: [{ translateY: pressed ? 1 : 0 }, { scale: pressed ? 0.94 : 1 }],
+  };
+}
+
 export function Screen({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
   const { theme } = useAppTheme();
   return (
@@ -90,8 +117,9 @@ export function PrimaryButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, borderColor: theme.border, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
-        variant === 'outline' && { borderWidth: 1 },
+        { backgroundColor: bg, borderColor: theme.border, opacity: disabled ? 0.5 : 1 },
+        variant === 'outline' && { borderWidth: 1, backgroundColor: pressed ? theme.accentLight + '55' : 'transparent' },
+        variant !== 'outline' && !disabled && elevatedStyle(pressed),
       ]}
     >
       <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>

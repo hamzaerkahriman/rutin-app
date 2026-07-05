@@ -1,5 +1,6 @@
 import React from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { elevatedStyle } from './ui';
 import { useAppTheme } from '../theme/ThemeProvider';
 
 export function AuthLayout({
@@ -45,7 +46,8 @@ export function AuthSubmitButton({
         <View
           style={[
             authStyles.button,
-            { backgroundColor: theme.accent, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
+            { backgroundColor: theme.accent, opacity: disabled ? 0.5 : 1 },
+            !disabled && elevatedStyle(pressed),
           ]}
         >
           <Text style={[authStyles.buttonText, { color: theme.accentText }]}>{label}</Text>

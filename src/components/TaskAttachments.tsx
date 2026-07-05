@@ -15,7 +15,7 @@ import { ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, Tex
 import { useAppStore } from '../store/AppStore';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { TaskAttachment } from '../types';
-import { Card, SectionTitle } from './ui';
+import { Card, elevatedCircleStyle, SectionTitle } from './ui';
 
 function formatDuration(seconds?: number): string {
   if (!seconds || Number.isNaN(seconds)) return '';
@@ -48,7 +48,11 @@ function VoicePlayerButton({ url }: { url: string }) {
   };
 
   return (
-    <Pressable onPress={toggle} hitSlop={8} style={[styles.playBtn, { backgroundColor: theme.accent }]}>
+    <Pressable
+      onPress={toggle}
+      hitSlop={8}
+      style={({ pressed }) => [styles.playBtn, { backgroundColor: theme.accent }, elevatedCircleStyle(pressed)]}
+    >
       <Ionicons name={playing ? 'pause' : 'play'} size={14} color={theme.accentText} />
     </Pressable>
   );

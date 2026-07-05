@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CircularProgress } from '../../src/components/Charts';
-import { Card, PrimaryButton, ProgressBar, SectionTitle } from '../../src/components/ui';
+import { Card, elevatedStyle, PrimaryButton, ProgressBar, SectionTitle } from '../../src/components/ui';
 import { getAiDailyComment } from '../../src/lib/aiAssist';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
@@ -130,7 +130,10 @@ export default function ChecklistScreen() {
           onSubmitEditing={handleQuickAdd}
           style={[styles.input, { borderColor: theme.border, color: theme.text }]}
         />
-        <Pressable onPress={handleQuickAdd} style={[styles.addButton, { backgroundColor: theme.accent }]}>
+        <Pressable
+          onPress={handleQuickAdd}
+          style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, elevatedStyle(pressed)]}
+        >
           <Text style={{ color: theme.accentText, fontWeight: '700' }}>Ekle</Text>
         </Pressable>
       </View>

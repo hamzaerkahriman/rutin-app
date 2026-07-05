@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircularProgress } from '../src/components/Charts';
-import { Card } from '../src/components/ui';
+import { Card, elevatedStyle } from '../src/components/ui';
 import { pickDailyMotivation } from '../src/data/mockData';
 import { supabase } from '../src/lib/supabase';
 import { useAppStore } from '../src/store/AppStore';
@@ -66,7 +66,7 @@ export default function SplashScreen() {
             <Text style={[styles.quote, { color: theme.text }]}>&ldquo;{quote}&rdquo;</Text>
             <Pressable
               onPress={() => router.replace('/(tabs)/dashboard')}
-              style={[styles.button, { backgroundColor: theme.accent }]}
+              style={({ pressed }) => [styles.button, { backgroundColor: theme.accent }, elevatedStyle(pressed)]}
             >
               <Text style={[styles.buttonText, { color: theme.accentText }]}>Bugüne başla</Text>
             </Pressable>
