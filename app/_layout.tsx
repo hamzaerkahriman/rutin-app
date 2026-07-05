@@ -56,6 +56,7 @@ function RootStack() {
         <Stack.Screen name="profile" options={{ title: 'Profil / Ayarlar' }} />
         <Stack.Screen name="notifications" options={{ title: 'Bildirimler' }} />
         <Stack.Screen name="messages/[id]" options={{ title: 'Sohbet' }} />
+        <Stack.Screen name="team/[userId]" options={{ title: 'Profil' }} />
       </Stack>
     </>
   );

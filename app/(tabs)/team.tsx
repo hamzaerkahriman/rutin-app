@@ -110,35 +110,41 @@ export default function TeamScreen() {
       <SectionTitle>Üye Performansı</SectionTitle>
       <View style={{ gap: 12, marginBottom: 24 }}>
         {memberStats.map((m) => (
-          <Card key={m.id} style={{ gap: 8 }}>
-            <View style={styles.memberHeader}>
-              <View>
-                <Text style={{ color: theme.text, fontWeight: '700', fontSize: 15 }}>{m.user.name}</Text>
-                <Text style={{ color: theme.textMuted, fontSize: 12 }}>{ROLE_LABELS[m.role]}</Text>
+          <Pressable key={m.id} onPress={() => router.push(`/team/${m.userId}`)}>
+            <Card style={{ gap: 8 }}>
+              <View style={styles.memberHeader}>
+                <View>
+                  <Text style={{ color: theme.text, fontWeight: '700', fontSize: 15 }}>{m.user.name}</Text>
+                  <Text style={{ color: theme.textMuted, fontSize: 12 }}>{ROLE_LABELS[m.role]}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  {canManage && <Text style={{ color: theme.accent, fontWeight: '700' }}>%{m.completionRate}</Text>}
+                  {m.userId !== currentUser.id && (
+                    <Pressable
+                      testID={`message-member-${m.userId}`}
+                      onPress={() => handleMessage(m.userId)}
+                      hitSlop={8}
+                      style={[styles.messageBtn, { borderColor: theme.border }]}
+                    >
+                      <Ionicons name="chatbubble-outline" size={16} color={theme.accent} />
+                    </Pressable>
+                  )}
+                </View>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Text style={{ color: theme.accent, fontWeight: '700' }}>%{m.completionRate}</Text>
-                {m.userId !== currentUser.id && (
-                  <Pressable
-                    testID={`message-member-${m.userId}`}
-                    onPress={() => handleMessage(m.userId)}
-                    hitSlop={8}
-                    style={[styles.messageBtn, { borderColor: theme.border }]}
-                  >
-                    <Ionicons name="chatbubble-outline" size={16} color={theme.accent} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
-            <ProgressBar progress={m.completionRate} />
-            <View style={styles.memberFooter}>
-              <Text style={{ color: theme.textMuted, fontSize: 12 }}>{m.active} aktif görev</Text>
-              <Text style={{ color: theme.textMuted, fontSize: 12 }}>{m.completed} tamamlandı</Text>
-              <Text style={{ color: m.overdue > 0 ? theme.danger : theme.textMuted, fontSize: 12 }}>
-                {m.overdue} geciken
-              </Text>
-            </View>
-          </Card>
+              {canManage && (
+                <>
+                  <ProgressBar progress={m.completionRate} />
+                  <View style={styles.memberFooter}>
+                    <Text style={{ color: theme.textMuted, fontSize: 12 }}>{m.active} aktif görev</Text>
+                    <Text style={{ color: theme.textMuted, fontSize: 12 }}>{m.completed} tamamlandı</Text>
+                    <Text style={{ color: m.overdue > 0 ? theme.danger : theme.textMuted, fontSize: 12 }}>
+                      {m.overdue} geciken
+                    </Text>
+                  </View>
+                </>
+              )}
+            </Card>
+          </Pressable>
         ))}
       </View>
 

@@ -90,6 +90,7 @@ interface AppStoreValue {
 
   switchWorkspace: (workspaceId: string) => Promise<void>;
   inviteMember: (email: string, role: InviteRole) => Promise<void>;
+  removeMember: (userId: string) => Promise<void>;
   cancelInvite: (inviteId: string) => Promise<void>;
   acceptInvite: (inviteId: string) => Promise<void>;
   declineInvite: (inviteId: string) => Promise<void>;
@@ -1284,6 +1285,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     [currentUser, workspace.id, members, sentInvites]
   );
 
+  const removeMember = useCallback(
+    async (userId: string) => {
+      if (!workspace.id) throw new Error('Workspace hazır değil');
+      const { error } = await supabase
+        .from('workspace_members')
+        .delete()
+        .eq('workspace_id', workspace.id)
+        .eq('user_id', userId);
+      if (error) throw new Error(error.message);
+      setMembers((prev) => prev.filter((m) => m.userId !== userId));
+    },
+    [workspace.id]
+  );
+
   const cancelInvite = useCallback(async (inviteId: string) => {
     const { data, error } = await supabase
       .from('workspace_invites')
@@ -1561,6 +1576,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     todaySave,
     switchWorkspace,
     inviteMember,
+    removeMember,
     cancelInvite,
     acceptInvite,
     declineInvite,
