@@ -340,3 +340,59 @@ eklendi (izin metinleri için — gerçek cihaz build'inde gerekli).
 yükleme (gerçek dosya seçici ile), dosya yükleme, mikrofon izniyle sesli not
 kaydı (Chromium fake-device flag'leriyle), imza URL'siyle görüntüleme/oynatma,
 silme (onay diyaloğu dahil) — hepsi çalışıyor.
+
+## Web deploy (GitHub Pages)
+
+Site: **https://hamzaerkahriman.github.io/rutin-app/**
+
+- Repo: `github.com/hamzaerkahriman/rutin-app` (public — GitHub Pages ücretsiz
+  planda private repo'da çalışmıyor; kodda zaten gizli bir şey yok, Supabase
+  anon key zaten client'a gömülmek üzere tasarlanmış).
+- `app.json`: `web.output: "single"` (SPA, tek `index.html`) +
+  `experiments.baseUrl: "/rutin-app"` (repo adıyla eşleşen alt path, aksi
+  halde asset/route'lar yanlış çözülür).
+- `.github/workflows/deploy-pages.yml`: her `master` push'ta `npx expo export
+  -p web` çalıştırıp `dist/`'i GitHub Pages'e deploy ediyor. Supabase
+  anahtarları GitHub repo secret'ı (`EXPO_PUBLIC_SUPABASE_URL`,
+  `EXPO_PUBLIC_SUPABASE_ANON_KEY`) olarak saklanıyor, workflow'a hardcode
+  edilmedi.
+- SPA routing için (`/task/123` gibi derin linkler, sayfa yenileme): GitHub
+  Pages eşleşmeyen path'lerde `404.html` döner, workflow `dist/index.html`'i
+  `dist/404.html` olarak da kopyalıyor — aynı JS bundle yükleyip Expo
+  Router'ın URL'den doğru ekranı render etmesini sağlıyor.
+- Pages "Source" ayarı **GitHub Actions** olarak açıldı (`gh api -X POST
+  repos/.../pages -f build_type=workflow` ile) — private repo'da bu API 422
+  döner, public'e çevirince çalıştı.
+
+## Davet e-postası (EmailJS)
+
+Ekip ekranından davet gönderilince artık gerçek bir e-posta da gidiyor
+(önceden davet sadece DB'de duruyordu, alan kişiye hiçbir bildirim
+gitmiyordu). Kaynak kod `supabase/functions/send-invite-email/index.ts`'te
+duruyor ama **Dashboard'da fonksiyon `mail` adıyla deploy edildi** — client
+tarafı (`src/lib/inviteEmail.ts`) bu isimle çağırıyor, isim tutarsızlığına
+dikkat.
+
+**Neden EmailJS**: Resend gibi servisler kendi domain'ini DNS ile doğrulamanı
+istiyor (domain'i olmayanlar için engel); EmailJS kullanıcının kendi
+Gmail/Outlook hesabını bağlayıp onun üzerinden gönderiyor, domain gerekmiyor,
+ücretsiz katmanı ayda 200 mail.
+
+Kurulum sırasında çıkan ve çözülen 3 tuzak (ileride benzer bir Edge Function
+eklenirse hepsi tekrar karşımıza çıkar):
+1. **"Enforce JWT Verification" / "Verify JWT with legacy secret"** —
+   Dashboard'dan deploy edilen her fonksiyon varsayılan olarak açık geliyor;
+   bu, tarayıcının CORS preflight (`OPTIONS`) isteğini reddettiriyor (preflight
+   Authorization header taşımaz). Fonksiyon kendi içinde zaten auth kontrolü
+   yaptığı için bu ayar **kapatılmalı** (Dashboard → Edge Functions → `mail` →
+   Settings).
+2. **EmailJS "API access from non-browser environments"** — varsayılan olarak
+   kapalı, sunucudan (Edge Function'dan) gelen istekleri 403 ile reddediyor.
+   Açılması gerekiyor: https://dashboard.emailjs.com/admin/account/security
+3. **EmailJS template değişkenleri** — template'teki "To Email" alanı
+   `{{to_email}}` gibi bir değişkene bağlanmalı, aksi halde her mail sabit bir
+   adrese gider (varsayılan "Contact Us" şablonu hesabın kendi e-postasına
+   sabitlenmiş geliyor).
+
+Gerçek bir Gmail adresine (`+alias` tekniğiyle) uçtan uca test edildi —
+200 döndü, mail gerçekten ulaştı.
