@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card, PrimaryButton, SectionTitle } from '../src/components/ui';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card, PrimaryButton, SectionTitle, SelectChip } from '../src/components/ui';
 import { isSupabaseConfigured } from '../src/lib/supabase';
 import { useAuth } from '../src/providers/AuthProvider';
 import { useAppStore } from '../src/store/AppStore';
@@ -33,20 +33,8 @@ export default function ProfileScreen() {
       <SectionTitle>Görünüm</SectionTitle>
       <View style={styles.chipRow}>
         {(['system', 'dark', 'light'] as const).map((m) => {
-          const active = mode === m;
           const label = m === 'system' ? 'Sistem' : m === 'dark' ? 'Karanlık' : 'Aydınlık';
-          return (
-            <Pressable
-              key={m}
-              onPress={() => setMode(m)}
-              style={[
-                styles.chip,
-                { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-              ]}
-            >
-              <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
-            </Pressable>
-          );
+          return <SelectChip key={m} label={label} active={mode === m} onPress={() => setMode(m)} />;
         })}
       </View>
 
@@ -89,11 +77,5 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
 });

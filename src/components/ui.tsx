@@ -149,6 +149,41 @@ export function PrimaryButton({
   );
 }
 
+// Öncelik/atanan-kişi/filtre gibi "seçim çipleri" app genelinde aynı
+// desende tekrarlanıyordu — tek bileşende toplayınca seçili çip de
+// dolu butonlarla aynı 3D basma hissini paylaşıyor.
+export function SelectChip({
+  label,
+  active,
+  onPress,
+  compact,
+  testID,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  compact?: boolean;
+  testID?: string;
+}) {
+  const { theme } = useAppTheme();
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        compact && styles.chipCompact,
+        { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
+        active && elevatedStyle(pressed),
+      ]}
+    >
+      <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: compact ? 12 : 13 }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function EmptyState({ message }: { message: string }) {
   const { theme } = useAppTheme();
   return (
@@ -204,5 +239,15 @@ const styles = StyleSheet.create({
   emptyState: {
     paddingVertical: 32,
     paddingHorizontal: 16,
+  },
+  chip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  chipCompact: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
 });

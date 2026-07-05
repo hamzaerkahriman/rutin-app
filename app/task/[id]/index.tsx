@@ -9,6 +9,7 @@ import {
   PriorityBadge,
   ProgressBar,
   SectionTitle,
+  SelectChip,
   StatusBadge,
 } from '../../../src/components/ui';
 import { TaskAttachmentsSection } from '../../../src/components/TaskAttachments';
@@ -292,19 +293,14 @@ export default function TaskDetailScreen() {
             {members.map((m) => {
               const active = newSubtaskAssignee === m.userId;
               return (
-                <Pressable
+                <SelectChip
                   key={m.userId}
                   testID={`subtask-assignee-${m.userId}`}
+                  compact
+                  label={m.user.name}
+                  active={active}
                   onPress={() => setNewSubtaskAssignee(active ? null : m.userId)}
-                  style={[
-                    styles.chip,
-                    { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-                  ]}
-                >
-                  <Text style={{ color: active ? theme.accentText : theme.text, fontSize: 12, fontWeight: '600' }}>
-                    {m.user.name}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -496,12 +492,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
   },
   input: {
     borderWidth: 1,

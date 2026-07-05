@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { TaskCard } from '../../src/components/TaskCard';
-import { EmptyState, PrimaryButton } from '../../src/components/ui';
+import { EmptyState, PrimaryButton, SelectChip } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { Task } from '../../src/types';
@@ -72,25 +72,9 @@ export default function TasksScreen() {
           keyExtractor={(f) => f.key}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterBar}
-          renderItem={({ item }) => {
-            const active = filter === item.key;
-            return (
-              <Pressable
-                onPress={() => setFilter(item.key)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: active ? theme.accent : theme.card,
-                    borderColor: active ? theme.accent : theme.border,
-                  },
-                ]}
-              >
-                <Text style={{ color: active ? theme.accentText : theme.textMuted, fontSize: 13, fontWeight: '600' }}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => (
+            <SelectChip label={item.label} active={filter === item.key} onPress={() => setFilter(item.key)} />
+          )}
         />
       </View>
 
@@ -118,12 +102,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
     paddingBottom: 8,
-  },
-  filterChip: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
   listContent: {
     padding: 16,

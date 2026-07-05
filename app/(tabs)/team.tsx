@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Card, PrimaryButton, ProgressBar, SectionTitle } from '../../src/components/ui';
+import { Card, PrimaryButton, ProgressBar, SectionTitle, SelectChip } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { INVITE_ROLE_LABELS, INVITE_STATUS_LABELS, InviteRole } from '../../src/types';
@@ -98,21 +98,9 @@ export default function TeamScreen() {
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       {workspaces.length > 1 && (
         <View style={styles.chipRow}>
-          {workspaces.map((w) => {
-            const active = w.id === workspace.id;
-            return (
-              <Pressable
-                key={w.id}
-                onPress={() => handleSwitchWorkspace(w.id)}
-                style={[
-                  styles.chip,
-                  { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-                ]}
-              >
-                <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>{w.name}</Text>
-              </Pressable>
-            );
-          })}
+          {workspaces.map((w) => (
+            <SelectChip key={w.id} label={w.name} active={w.id === workspace.id} onPress={() => handleSwitchWorkspace(w.id)} />
+          ))}
         </View>
       )}
 
@@ -171,23 +159,9 @@ export default function TeamScreen() {
             style={[styles.input, { borderColor: theme.border, color: theme.text }]}
           />
           <View style={styles.chipRow}>
-            {INVITE_ROLES.map((r) => {
-              const active = inviteRole === r;
-              return (
-                <Pressable
-                  key={r}
-                  onPress={() => setInviteRole(r)}
-                  style={[
-                    styles.chip,
-                    { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-                  ]}
-                >
-                  <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>
-                    {INVITE_ROLE_LABELS[r]}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {INVITE_ROLES.map((r) => (
+              <SelectChip key={r} label={INVITE_ROLE_LABELS[r]} active={inviteRole === r} onPress={() => setInviteRole(r)} />
+            ))}
           </View>
           <View style={{ marginBottom: 24 }}>
             <PrimaryButton
@@ -258,12 +232,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 16,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
   input: {
     borderWidth: 1,

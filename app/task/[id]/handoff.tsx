@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { EmptyState, PrimaryButton, SectionTitle } from '../../../src/components/ui';
+import { EmptyState, PrimaryButton, SectionTitle, SelectChip } from '../../../src/components/ui';
 import { getAiHandoffDraft } from '../../../src/lib/aiAssist';
 import { useAppStore } from '../../../src/store/AppStore';
 import { useAppTheme } from '../../../src/theme/ThemeProvider';
@@ -83,23 +83,9 @@ export default function HandoffScreen() {
         </Text>
       )}
       <View style={styles.chipRow}>
-        {candidates.map((m) => {
-          const active = toUserId === m.userId;
-          return (
-            <Pressable
-              key={m.userId}
-              onPress={() => setToUserId(m.userId)}
-              style={[
-                styles.chip,
-                { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-              ]}
-            >
-              <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>
-                {m.user.name}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {candidates.map((m) => (
+          <SelectChip key={m.userId} label={m.user.name} active={toUserId === m.userId} onPress={() => setToUserId(m.userId)} />
+        ))}
       </View>
 
       <SectionTitle>Görevin Mevcut Durumu</SectionTitle>
@@ -167,12 +153,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 16,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
   readonlyBox: {
     borderWidth: 1,

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { elevatedStyle, PrimaryButton, SectionTitle } from '../../src/components/ui';
+import { elevatedStyle, PrimaryButton, SectionTitle, SelectChip } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { TASK_PRIORITY_LABELS, TaskPriority } from '../../src/types';
@@ -102,23 +102,9 @@ export default function CreateTaskScreen() {
 
       <SectionTitle>Öncelik</SectionTitle>
       <View style={styles.chipRow}>
-        {PRIORITIES.map((p) => {
-          const active = priority === p;
-          return (
-            <Pressable
-              key={p}
-              onPress={() => setPriority(p)}
-              style={[
-                styles.chip,
-                { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-              ]}
-            >
-              <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>
-                {TASK_PRIORITY_LABELS[p]}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {PRIORITIES.map((p) => (
+          <SelectChip key={p} label={TASK_PRIORITY_LABELS[p]} active={priority === p} onPress={() => setPriority(p)} />
+        ))}
       </View>
 
       <SectionTitle>Etiketler</SectionTitle>
@@ -159,24 +145,15 @@ export default function CreateTaskScreen() {
 
       <SectionTitle>Atanan Kişi</SectionTitle>
       <View style={styles.chipRow}>
-        {members.map((m) => {
-          const active = assignedTo === m.userId;
-          return (
-            <Pressable
-              key={m.userId}
-              testID={`create-assignee-${m.userId}`}
-              onPress={() => setAssignedTo(m.userId)}
-              style={[
-                styles.chip,
-                { backgroundColor: active ? theme.accent : theme.card, borderColor: active ? theme.accent : theme.border },
-              ]}
-            >
-              <Text style={{ color: active ? theme.accentText : theme.text, fontWeight: '600', fontSize: 13 }}>
-                {m.user.name}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {members.map((m) => (
+          <SelectChip
+            key={m.userId}
+            testID={`create-assignee-${m.userId}`}
+            label={m.user.name}
+            active={assignedTo === m.userId}
+            onPress={() => setAssignedTo(m.userId)}
+          />
+        ))}
       </View>
 
       <View style={{ marginTop: 24 }}>
