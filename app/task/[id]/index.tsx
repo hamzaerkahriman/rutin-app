@@ -174,6 +174,16 @@ export default function TaskDetailScreen() {
         <Text style={{ color: theme.textMuted, fontSize: 13 }}>Son tarih: {task.dueDate ?? '—'}</Text>
       </View>
 
+      {task.tags.length > 0 && (
+        <View style={styles.tagRow}>
+          {task.tags.map((tag) => (
+            <View key={tag} style={[styles.tagChip, { backgroundColor: theme.accentLight, borderColor: theme.accent }]}>
+              <Text style={{ color: theme.accent, fontWeight: '600', fontSize: 12 }}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <View style={{ marginVertical: 16 }}>
         <ProgressBar progress={task.progress} />
         <Text style={{ color: theme.textMuted, marginTop: 6, fontSize: 12 }}>İlerleme: %{task.progress}</Text>
@@ -442,6 +452,18 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 10,
+  },
+  tagChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   section: {
     marginTop: 24,
