@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
@@ -14,6 +14,7 @@ import {
 } from '../../../src/components/ui';
 import { TaskAttachmentsSection } from '../../../src/components/TaskAttachments';
 import { getAiTaskSummary } from '../../../src/lib/aiAssist';
+import { confirmAction, notify } from '../../../src/lib/confirm';
 import { useAppStore } from '../../../src/store/AppStore';
 import { useAppTheme } from '../../../src/theme/ThemeProvider';
 import { NOTE_TYPE_LABELS } from '../../../src/types';
@@ -43,6 +44,7 @@ export default function TaskDetailScreen() {
     updateTaskStatus,
     acceptHandoff,
     rejectHandoff,
+    deleteTask,
   } = useAppStore();
 
   const [newChecklistText, setNewChecklistText] = useState('');
@@ -55,6 +57,26 @@ export default function TaskDetailScreen() {
   const [summarizing, setSummarizing] = useState(false);
 
   const task = getTask(id);
+  // getSubtasks/getUser sadece id string'ine bakıyor, task nesnesine ihtiyaç
+  // duymuyor — bu yüzden hook'ların hepsi (Rules of Hooks gereği) aşağıdaki
+  // "task bulunamadı" early return'ünden ÖNCE, koşulsuz çağrılıyor.
+  const subtasksForMemo = getSubtasks(id);
+  const assigneeBreakdown = useMemo(() => {
+    const byAssignee = new Map<string, { total: number; completed: number }>();
+    subtasksForMemo.forEach((s) => {
+      const key = s.assignedTo ?? 'unassigned';
+      const entry = byAssignee.get(key) ?? { total: 0, completed: 0 };
+      entry.total += 1;
+      if (s.status === 'completed') entry.completed += 1;
+      byAssignee.set(key, entry);
+    });
+    return Array.from(byAssignee.entries()).map(([userId, stat]) => ({
+      user: userId === 'unassigned' ? undefined : getUser(userId),
+      total: stat.total,
+      completed: stat.completed,
+      percent: Math.round((stat.completed / stat.total) * 100),
+    }));
+  }, [subtasksForMemo, getUser]);
 
   if (!task) {
     return (
@@ -68,28 +90,28 @@ export default function TaskDetailScreen() {
   const creator = getUser(task.createdBy);
   const notes = getTaskNotes(task.id);
   const handoffs = getTaskHandoffs(task.id);
-  const subtasks = getSubtasks(task.id);
+  const subtasks = subtasksForMemo;
   const parentTask = task.parentTaskId ? getTask(task.parentTaskId) : undefined;
   const isTerminal = ['completed', 'failed', 'cancelled'].includes(task.status);
   const pendingHandoff = handoffs.find((h) => h.acceptedStatus === 'pending');
   const isRecipient = pendingHandoff?.toUserId === currentUser.id;
+  const myRole = members.find((m) => m.userId === currentUser.id)?.role;
+  const canDelete = myRole === 'owner' || myRole === 'admin';
 
-  const assigneeBreakdown = useMemo(() => {
-    const byAssignee = new Map<string, { total: number; completed: number }>();
-    subtasks.forEach((s) => {
-      const key = s.assignedTo ?? 'unassigned';
-      const entry = byAssignee.get(key) ?? { total: 0, completed: 0 };
-      entry.total += 1;
-      if (s.status === 'completed') entry.completed += 1;
-      byAssignee.set(key, entry);
-    });
-    return Array.from(byAssignee.entries()).map(([userId, stat]) => ({
-      user: userId === 'unassigned' ? undefined : getUser(userId),
-      total: stat.total,
-      completed: stat.completed,
-      percent: Math.round((stat.completed / stat.total) * 100),
-    }));
-  }, [subtasks, getUser]);
+  const handleDelete = async () => {
+    const confirmed = await confirmAction(
+      'Görevi sil',
+      `"${task.title}" kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
+      'Sil'
+    );
+    if (!confirmed) return;
+    try {
+      await deleteTask(task.id);
+      router.back();
+    } catch (err) {
+      notify('Hata', err instanceof Error ? err.message : 'Görev silinemedi');
+    }
+  };
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
@@ -155,6 +177,17 @@ export default function TaskDetailScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+      {canDelete && (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <Pressable testID="delete-task-button" onPress={handleDelete} hitSlop={12} style={{ paddingHorizontal: 8 }}>
+                <Ionicons name="trash-outline" size={20} color={theme.danger} />
+              </Pressable>
+            ),
+          }}
+        />
+      )}
       {parentTask && (
         <Pressable onPress={() => router.push(`/task/${parentTask.id}`)} style={{ marginBottom: 6 }}>
           <Text style={{ color: theme.accent, fontSize: 13, fontWeight: '600' }}>← {parentTask.title}</Text>

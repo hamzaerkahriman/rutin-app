@@ -68,6 +68,7 @@ interface AppStoreValue {
   getTaskAttachments: (taskId: string) => TaskAttachment[];
 
   createTask: (input: Partial<Task> & { title: string }) => Promise<Task>;
+  deleteTask: (taskId: string) => Promise<void>;
   addSubtask: (parentTaskId: string, input: { title: string; assignedTo?: string }) => Promise<Task>;
   updateTaskStatus: (taskId: string, status: TaskStatus) => void;
   toggleChecklistItem: (taskId: string, checklistItemId: string) => void;
@@ -861,6 +862,21 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     [workspace.id, currentUser]
   );
 
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+      if (error) throw new Error(error.message);
+      // DB'de checklist/not/devir/ek ve alt görevler zaten ON DELETE CASCADE
+      // ile siliniyor — burada sadece yerel state'i aynı şekilde temizliyoruz.
+      const removedIds = new Set([taskId, ...tasks.filter((t) => t.parentTaskId === taskId).map((t) => t.id)]);
+      setTasks((prev) => prev.filter((t) => !removedIds.has(t.id)));
+      setNotes((prev) => prev.filter((n) => !removedIds.has(n.taskId)));
+      setHandoffs((prev) => prev.filter((h) => !removedIds.has(h.taskId)));
+      setAttachments((prev) => prev.filter((a) => !removedIds.has(a.taskId)));
+    },
+    [tasks]
+  );
+
   // Bir alt görevin durumu değişince (veya yeni bir alt görev eklenince) üst
   // görevin ilerlemesini alt görevlerin tamamlanma oranından yeniden hesaplar
   // — ama sadece üst görevin progressMode'u 'subtask' ise.
@@ -1532,6 +1548,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     unreadCountForConversation,
     getTaskAttachments,
     createTask,
+    deleteTask,
     addSubtask,
     updateTaskStatus,
     toggleChecklistItem,
