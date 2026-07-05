@@ -1,23 +1,18 @@
 import { supabase } from './supabase';
 
 // Workspace daveti oluşturulduktan sonra davet edilen kişiye bilgilendirme
-// maili atar (EmailJS üzerinden, kodu supabase/functions/send-invite-email/
-// içinde duran ama Dashboard'da "mail" adıyla deploy edilmiş Edge Function
+// maili atar (EmailJS üzerinden, supabase/functions/mail/ Edge Function'ı
 // ile). Bilerek fire-and-forget kullanılıyor — mail gitmese bile davet DB'de
 // zaten duruyor, kişi kendi başına giriş yapıp Dashboard'dan kabul edebilir.
-export async function sendInviteEmail(params: {
-  toEmail: string;
-  inviterName: string;
-  workspaceName: string;
-  role: string;
-}): Promise<void> {
+//
+// Sadece `inviteId` gönderiyoruz — e-posta/workspace adı/rol gibi bilgileri
+// fonksiyon kendi içinde, çağıranın RLS'e tabi JWT'siyle DB'den okuyor. Bu
+// sayede fonksiyon rastgele parametrelerle çağrılıp açık bir mail-relay gibi
+// kötüye kullanılamaz — sadece gerçekten var olan ve çağıranın erişebildiği
+// bir davete karşılık mail gider.
+export async function sendInviteEmail(inviteId: string): Promise<void> {
   const { error } = await supabase.functions.invoke('mail', {
-    body: {
-      toEmail: params.toEmail,
-      inviterName: params.inviterName,
-      workspaceName: params.workspaceName,
-      role: params.role,
-    },
+    body: { inviteId },
   });
   if (error) console.error('[Rutin] davet e-postası gönderilemedi:', error.message);
 }

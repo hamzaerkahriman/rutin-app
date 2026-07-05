@@ -12,7 +12,6 @@ import {
   ChecklistItem,
   Conversation,
   DailySave,
-  INVITE_ROLE_LABELS,
   InviteRole,
   NoteType,
   Task,
@@ -1264,14 +1263,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       if (error || !data) throw new Error(error?.message ?? 'Davet gönderilemedi');
       setSentInvites((prev) => [mapInvite(data), ...prev]);
 
-      sendInviteEmail({
-        toEmail: normalized,
-        inviterName: currentUser.name,
-        workspaceName: workspace.name,
-        role: INVITE_ROLE_LABELS[role],
-      }).catch((err) => console.error('[Rutin] davet e-postası gönderilemedi:', err));
+      sendInviteEmail(data.id).catch((err) => console.error('[Rutin] davet e-postası gönderilemedi:', err));
     },
-    [currentUser, workspace.id, workspace.name, members, sentInvites]
+    [currentUser, workspace.id, members, sentInvites]
   );
 
   const cancelInvite = useCallback(async (inviteId: string) => {

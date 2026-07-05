@@ -301,12 +301,13 @@ Supabase JWT'siyle RLS'e tabi bir client kurup görev/not verisini okuyor —
 yani bir kullanıcı üyesi olmadığı bir workspace'in görevini AI'a asla
 özetletemez (RLS zaten bunu engeller, fonksiyon service role kullanmıyor).
 
-**Deploy**: Bu proje için Supabase CLI kurulu değil, bu yüzden fonksiyon
-Dashboard üzerinden manuel deploy edilmeli: Dashboard → Edge Functions →
-"Deploy a new function" → adı `ai-assist` → `index.ts` dosyasının tamamını
-yapıştır → deploy et. Sonra Dashboard → Edge Functions → `ai-assist` →
-Secrets'tan `ANTHROPIC_API_KEY` ekle. CLI kurulursa `supabase functions deploy
-ai-assist` ile de yapılabilir.
+**Deploy**: Supabase CLI kurulu ve projeye linkli (`brew install
+supabase/tap/supabase` → `supabase login` → `supabase link --project-ref
+eidsmjxewaouwzlrmlws`). Kod değişikliğinde: `supabase functions deploy
+ai-assist --no-verify-jwt` (`--no-verify-jwt` önemli — aksi halde CORS
+preflight/OPTIONS isteği engellenir, bkz. "Davet e-postası" bölümündeki
+tuzak #1). Secrets hâlâ Dashboard'dan elle eklenmeli: Edge Functions →
+`ai-assist` → Secrets → `ANTHROPIC_API_KEY`.
 
 Zamanlanmış bildirimler (`0009_scheduled_notifications.sql`) artık var —
 `pg_cron` ile günlük/haftalık çalışan 3 fonksiyon: son tarih yaklaşıyor/geçti,
@@ -368,10 +369,9 @@ Site: **https://hamzaerkahriman.github.io/rutin-app/**
 
 Ekip ekranından davet gönderilince artık gerçek bir e-posta da gidiyor
 (önceden davet sadece DB'de duruyordu, alan kişiye hiçbir bildirim
-gitmiyordu). Kaynak kod `supabase/functions/send-invite-email/index.ts`'te
-duruyor ama **Dashboard'da fonksiyon `mail` adıyla deploy edildi** — client
-tarafı (`src/lib/inviteEmail.ts`) bu isimle çağırıyor, isim tutarsızlığına
-dikkat.
+gitmiyordu). Kaynak kod `supabase/functions/mail/index.ts`'te (fonksiyon
+Dashboard'dan ilk deploy edilirken `mail` adı verildi, klasör de buna göre
+adlandırıldı — client tarafı `src/lib/inviteEmail.ts` de bu isimle çağırıyor).
 
 **Neden EmailJS**: Resend gibi servisler kendi domain'ini DNS ile doğrulamanı
 istiyor (domain'i olmayanlar için engel); EmailJS kullanıcının kendi
@@ -393,6 +393,15 @@ eklenirse hepsi tekrar karşımıza çıkar):
    `{{to_email}}` gibi bir değişkene bağlanmalı, aksi halde her mail sabit bir
    adrese gider (varsayılan "Contact Us" şablonu hesabın kendi e-postasına
    sabitlenmiş geliyor).
+
+**Güvenlik düzeltmesi (bkz. sağlamlık/güvenlik turu)**: İlk sürüm client'tan
+gelen `toEmail`/`workspaceName`/`inviterName` alanlarına doğrudan güveniyordu
+— kayıt ücretsiz ve açık olduğu için bu, giriş yapmış herhangi bir kullanıcının
+fonksiyonu rastgele parametrelerle çağırıp bu Gmail üzerinden istediği adrese
+mail attırabileceği bir açık mail-relay'e dönüşüyordu. Artık fonksiyon sadece
+bir `inviteId` alıyor, e-posta/workspace adı/rolü kendi içinde çağıranın
+JWT'siyle (RLS'e tabi, `invites_select_scope` politikasından geçerek) DB'den
+okuyor — biri gerçekten yetkili olmadığı bir daveti tetikleyemez.
 
 Gerçek bir Gmail adresine (`+alias` tekniğiyle) uçtan uca test edildi —
 200 döndü, mail gerçekten ulaştı.
