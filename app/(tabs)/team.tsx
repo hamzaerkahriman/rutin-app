@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Card, PrimaryButton, ProgressBar, SectionTitle, SelectChip } from '../../src/components/ui';
+import { Card, noSelectStyle, PrimaryButton, ProgressBar, SectionTitle, SelectChip } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { INVITE_ROLE_LABELS, INVITE_STATUS_LABELS, InviteRole } from '../../src/types';
@@ -110,7 +110,7 @@ export default function TeamScreen() {
       <SectionTitle>Üye Performansı</SectionTitle>
       <View style={{ gap: 12, marginBottom: 24 }}>
         {memberStats.map((m) => (
-          <Pressable key={m.id} onPress={() => router.push(`/team/${m.userId}`)}>
+          <Pressable key={m.id} onPress={() => router.push(`/team/${m.userId}`)} style={noSelectStyle}>
             <Card style={{ gap: 8 }}>
               <View style={styles.memberHeader}>
                 <View>
@@ -174,6 +174,7 @@ export default function TeamScreen() {
               label={sending ? 'Gönderiliyor...' : 'Davet Gönder'}
               onPress={handleInvite}
               disabled={!inviteEmail.trim() || sending}
+              compact
             />
           </View>
 

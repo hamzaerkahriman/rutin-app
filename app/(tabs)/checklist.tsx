@@ -202,7 +202,7 @@ export default function ChecklistScreen() {
               multiline
               style={[styles.textarea, { borderColor: theme.border, color: theme.text }]}
             />
-            <PrimaryButton label="Gün sonu save al" onPress={handleSaveDay} variant="success" />
+            <PrimaryButton label="Gün sonu save al" onPress={handleSaveDay} variant="success" compact />
           </>
         )}
       </View>

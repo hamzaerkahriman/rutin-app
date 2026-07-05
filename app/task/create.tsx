@@ -161,6 +161,7 @@ export default function CreateTaskScreen() {
           label={submitting ? 'Oluşturuluyor...' : 'Görevi Oluştur'}
           onPress={handleSubmit}
           disabled={!canSubmit}
+          compact
         />
       </View>
     </ScrollView>

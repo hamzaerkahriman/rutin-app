@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, EmptyState } from '../../src/components/ui';
+import { Card, EmptyState, noSelectStyle } from '../../src/components/ui';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 import { Conversation } from '../../src/types';
@@ -54,6 +54,7 @@ export default function MessagesScreen() {
           <Pressable
             testID={`conversation-row-${item.other?.id}`}
             onPress={() => router.push(`/messages/${item.conversation.id}`)}
+            style={noSelectStyle}
           >
             <Card
               style={{

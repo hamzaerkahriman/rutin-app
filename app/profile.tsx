@@ -63,7 +63,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={{ marginTop: 32 }}>
-        <PrimaryButton label="Çıkış Yap" variant="danger" onPress={handleSignOut} />
+        <PrimaryButton label="Çıkış Yap" variant="danger" onPress={handleSignOut} compact />
       </View>
     </ScrollView>
   );

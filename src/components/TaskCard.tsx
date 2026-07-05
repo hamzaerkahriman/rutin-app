@@ -6,6 +6,7 @@ import { useAppStore } from '../store/AppStore';
 import { priorityColors } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { Task } from '../types';
+import { noSelectStyle } from './ui';
 
 export function TaskCard({ task }: { task: Task }) {
   const { theme } = useAppTheme();
@@ -25,6 +26,7 @@ export function TaskCard({ task }: { task: Task }) {
       onPress={() => router.push(`/task/${task.id}`)}
       style={({ pressed }) => [
         styles.card,
+        noSelectStyle,
         {
           backgroundColor: theme.card,
           borderColor: theme.cardBorder,

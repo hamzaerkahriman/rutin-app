@@ -5,6 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import {
   Card,
   EmptyState,
+  noSelectStyle,
   PrimaryButton,
   PriorityBadge,
   ProgressBar,
@@ -189,7 +190,7 @@ export default function TaskDetailScreen() {
         />
       )}
       {parentTask && (
-        <Pressable onPress={() => router.push(`/task/${parentTask.id}`)} style={{ marginBottom: 6 }}>
+        <Pressable onPress={() => router.push(`/task/${parentTask.id}`)} style={{ marginBottom: 6, ...noSelectStyle }}>
           <Text style={{ color: theme.accent, fontSize: 13, fontWeight: '600' }}>← {parentTask.title}</Text>
         </Pressable>
       )}
@@ -278,7 +279,12 @@ export default function TaskDetailScreen() {
             subtasks.map((s) => {
               const subAssignee = s.assignedTo ? getUser(s.assignedTo) : undefined;
               return (
-                <Pressable key={s.id} testID={`subtask-item-${s.id}`} onPress={() => router.push(`/task/${s.id}`)}>
+                <Pressable
+                  key={s.id}
+                  testID={`subtask-item-${s.id}`}
+                  onPress={() => router.push(`/task/${s.id}`)}
+                  style={noSelectStyle}
+                >
                   <Card style={{ gap: 6 }}>
                     <View style={styles.subtaskHeader}>
                       <Text style={{ color: theme.text, fontWeight: '600', flexShrink: 1 }}>{s.title}</Text>

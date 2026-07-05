@@ -16,6 +16,12 @@ const cardShadow: ViewStyle = {
   elevation: 2,
 };
 
+// react-native-web'de metin varsayılan olarak seçilebilir — geniş, tıklanabilir
+// bir satır/kart (ör. ekip üyesi kartı) üzerinde fare ile tıklarken en ufak bir
+// sürükleme metni SEÇER ve click event'i hiç ateşlenmez ("tıklıyorum ama hiçbir
+// şey olmuyor" hissi budur). Tüm kart/satır Pressable'larına bunu ekliyoruz.
+export const noSelectStyle: ViewStyle = { userSelect: 'none' } as ViewStyle;
+
 // Basılabilir öğelere "3D tuş" hissi veren gölge/basma stilleri — tek yerden
 // ayarlanabilsin diye tüm dolu-renkli butonlar (PrimaryButton ve app genelindeki
 // küçük "Ekle"/gönder/oynat butonları) bu iki yardımcıyı paylaşıyor.
@@ -117,11 +123,17 @@ export function PrimaryButton({
   onPress,
   variant = 'accent',
   disabled,
+  compact,
 }: {
   label: string;
   onPress: () => void;
   variant?: 'accent' | 'success' | 'danger' | 'outline';
   disabled?: boolean;
+  // Tek başına duran (yan yana ikili olmayan) butonlarda kartı/ekranı
+  // boydan boya kaplamasın diye — kendini ortalayan, en fazla 260px'lik
+  // kompakt bir buton üretir. Yan yana iki butonun eşit genişlikte
+  // esnemesi gereken yerlerde (ör. "Devret"/"Tamamla") kullanılmaz.
+  compact?: boolean;
 }) {
   const { theme } = useAppTheme();
 
@@ -139,6 +151,7 @@ export function PrimaryButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
+        compact && styles.buttonCompact,
         { backgroundColor: bg, borderColor: theme.border, opacity: disabled ? 0.5 : 1 },
         variant === 'outline' && { borderWidth: 1, backgroundColor: pressed ? theme.accentLight + '55' : 'transparent' },
         variant !== 'outline' && !disabled && elevatedStyle(pressed),
@@ -231,6 +244,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonCompact: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 260,
+    paddingHorizontal: 32,
   },
   buttonText: {
     fontSize: 15,
