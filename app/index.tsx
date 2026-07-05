@@ -117,13 +117,15 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 999,
-    paddingVertical: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
     marginTop: 4,
   },
   buttonText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
 });
