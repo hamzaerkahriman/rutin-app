@@ -1,13 +1,15 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput } from 'react-native';
-import { AuthLayout, AuthSubmitButton, authInputStyle, authPlaceholderColor } from '../../src/components/AuthLayout';
+import { AuthLayout, AuthSubmitButton, useAuthInputStyle } from '../../src/components/AuthLayout';
 import { useAuth } from '../../src/providers/AuthProvider';
-import { palette } from '../../src/theme/colors';
+import { useAppTheme } from '../../src/theme/ThemeProvider';
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
   const router = useRouter();
+  const { theme } = useAppTheme();
+  const inputStyle = useAuthInputStyle();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,32 +44,32 @@ export default function SignUpScreen() {
 
   return (
     <AuthLayout title="Hesap oluştur" subtitle="Rutinini kurmaya bugün başla">
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {info ? <Text style={styles.info}>{info}</Text> : null}
+      {error ? <Text style={[styles.error, { color: theme.danger }]}>{error}</Text> : null}
+      {info ? <Text style={[styles.info, { color: theme.success }]}>{info}</Text> : null}
 
       <TextInput
         value={name}
         onChangeText={setName}
         placeholder="Ad Soyad"
-        placeholderTextColor={authPlaceholderColor}
-        style={authInputStyle}
+        placeholderTextColor={theme.textMuted}
+        style={inputStyle}
       />
       <TextInput
         value={email}
         onChangeText={setEmail}
         placeholder="E-posta"
-        placeholderTextColor={authPlaceholderColor}
+        placeholderTextColor={theme.textMuted}
         autoCapitalize="none"
         keyboardType="email-address"
-        style={authInputStyle}
+        style={inputStyle}
       />
       <TextInput
         value={password}
         onChangeText={setPassword}
         placeholder="Şifre (en az 6 karakter)"
-        placeholderTextColor={authPlaceholderColor}
+        placeholderTextColor={theme.textMuted}
         secureTextEntry
-        style={authInputStyle}
+        style={inputStyle}
       />
 
       <AuthSubmitButton
@@ -76,8 +78,8 @@ export default function SignUpScreen() {
         disabled={!canSubmit}
       />
 
-      <Link href="/(auth)/sign-in" style={styles.link}>
-        Zaten hesabın var mı? <Text style={styles.linkAccent}>Giriş yap</Text>
+      <Link href="/(auth)/sign-in" style={[styles.link, { color: theme.textMuted }]}>
+        Zaten hesabın var mı? <Text style={[styles.linkAccent, { color: theme.accent }]}>Giriş yap</Text>
       </Link>
     </AuthLayout>
   );
@@ -85,21 +87,17 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   error: {
-    color: '#FF8A80',
     marginBottom: 4,
   },
   info: {
-    color: '#8FE3B0',
     marginBottom: 4,
   },
   link: {
     marginTop: 8,
     textAlign: 'center',
-    color: 'rgba(242,241,237,0.75)',
     fontSize: 13,
   },
   linkAccent: {
-    color: palette.goldLight,
     fontWeight: '700',
   },
 });

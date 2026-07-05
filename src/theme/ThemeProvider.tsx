@@ -18,9 +18,10 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
-  // Varsayılan olarak 'dark': premium safir/altın kimlik en iyi koyu zeminde
-  // okunuyor. Kullanıcı Profil'den 'Aydınlık'/'Sistem'e açıkça geçebilir.
-  const [mode, setModeState] = useState<ThemeMode>('dark');
+  // Varsayılan olarak 'light': "Rutin Adaptive System" açık, minimalist
+  // zeminde tasarlandı (bkz. DESIGN.md). Kullanıcı Profil'den 'Koyu'/'Sistem'e
+  // açıkça geçebilir.
+  const [mode, setModeState] = useState<ThemeMode>('light');
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((stored) => {

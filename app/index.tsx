@@ -1,23 +1,19 @@
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppBackground } from '../src/components/AppBackground';
+import { CircularProgress } from '../src/components/Charts';
+import { Card } from '../src/components/ui';
 import { pickDailyMotivation } from '../src/data/mockData';
 import { supabase } from '../src/lib/supabase';
 import { useAppStore } from '../src/store/AppStore';
-import { gradients, palette } from '../src/theme/colors';
-import { pickRandomBackground } from '../src/theme/backgrounds';
+import { useAppTheme } from '../src/theme/ThemeProvider';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   const { tasks, currentUser } = useAppStore();
-  // useState(() => ...) ile lazy init: bileşen her mount olduğunda (yani her
-  // "ana sayfadan çıkılıp" splash'e dönüldüğünde) yeni bir rastgele arka
-  // plan ve söz seçilir.
-  const [background] = useState(() => pickRandomBackground());
   const [quote, setQuote] = useState(() => pickDailyMotivation().quote);
 
   useEffect(() => {
@@ -52,131 +48,81 @@ export default function SplashScreen() {
   );
 
   return (
-    <AppBackground background={background}>
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.top}>
-          <Text style={styles.brand}>RUTİN</Text>
-          <Text style={styles.date}>{formattedDate}</Text>
-        </View>
-
-        <View style={styles.middle}>
-          <View style={styles.quoteDividerTop} />
-          <Text style={styles.quote}>{quote}</Text>
-          <View style={styles.quoteDivider} />
-        </View>
-
-        <BlurView intensity={40} tint="dark" style={styles.card}>
-          <View style={styles.progressRow}>
-            <Text style={styles.progressLabel}>Bugünkü ilerleme</Text>
-            <Text style={styles.progressValue}>%{progressPct}</Text>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.top}>
+            <Text style={[styles.brand, { color: theme.accent }]}>RUTİN</Text>
+            <Text style={[styles.date, { color: theme.textMuted }]}>{formattedDate}</Text>
           </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
-          </View>
-          <Pressable onPress={() => router.replace('/(tabs)/dashboard')}>
-            {({ pressed }) => (
-              <LinearGradient
-                colors={gradients.gold}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={[styles.button, { opacity: pressed ? 0.85 : 1 }]}
-              >
-                <Text style={styles.buttonText}>Bugüne başla</Text>
-              </LinearGradient>
-            )}
-          </Pressable>
-        </BlurView>
+
+          <Card style={styles.progressCard}>
+            <CircularProgress progress={progressPct} sublabel="İLERLEME" />
+            <Text style={[styles.progressCaption, { color: theme.text }]}>Bugünkü İlerleme</Text>
+          </Card>
+
+          <Card style={{ ...styles.quoteCard, backgroundColor: theme.accent + '14', borderColor: theme.accent }}>
+            <Ionicons name="chatbox-ellipses-outline" size={28} color={theme.accent} />
+            <Text style={[styles.quote, { color: theme.text }]}>&ldquo;{quote}&rdquo;</Text>
+            <Pressable
+              onPress={() => router.replace('/(tabs)/dashboard')}
+              style={[styles.button, { backgroundColor: theme.accent }]}
+            >
+              <Text style={[styles.buttonText, { color: theme.accentText }]}>Bugüne başla</Text>
+            </Pressable>
+          </Card>
+        </ScrollView>
       </SafeAreaView>
-    </AppBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
+  content: {
+    padding: 24,
+    gap: 20,
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   top: {
     gap: 4,
+    marginBottom: 8,
   },
   brand: {
-    color: '#F2F1ED',
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: 4,
   },
   date: {
-    color: 'rgba(242,241,237,0.7)',
     fontSize: 14,
     textTransform: 'capitalize',
   },
-  middle: {
-    flex: 1,
-    justifyContent: 'center',
+  progressCard: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    gap: 12,
   },
-  quoteDividerTop: {
-    marginBottom: 20,
-    width: 28,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(242,241,237,0.4)',
+  progressCaption: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  quoteCard: {
+    gap: 14,
+    borderLeftWidth: 4,
   },
   quote: {
-    color: '#F2F1ED',
-    fontSize: 27,
+    fontSize: 22,
     fontWeight: '700',
-    lineHeight: 36,
-    letterSpacing: 0.2,
-  },
-  quoteDivider: {
-    marginTop: 24,
-    width: 48,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: palette.gold,
-  },
-  card: {
-    borderRadius: 24,
-    padding: 20,
-    gap: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-  },
-  progressRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  progressLabel: {
-    color: 'rgba(242,241,237,0.75)',
-    fontSize: 14,
-  },
-  progressValue: {
-    color: '#F2F1ED',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: palette.emerald,
+    lineHeight: 30,
   },
   button: {
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 999,
+    paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4,
   },
   buttonText: {
-    color: palette.sapphire,
     fontSize: 15,
     fontWeight: '700',
   },

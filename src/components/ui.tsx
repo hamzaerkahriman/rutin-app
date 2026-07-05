@@ -1,7 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { gradients, priorityColors, statusColors } from '../theme/colors';
+import { priorityColors, statusColors } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TaskPriority, TaskStatus } from '../types';
 
@@ -35,7 +34,7 @@ export function SectionTitle({ children }: { children: React.ReactNode }) {
 export function StatusBadge({ status }: { status: TaskStatus }) {
   const color = statusColors[status];
   return (
-    <View style={[styles.badge, { backgroundColor: color + '26', borderColor: color }]}>
+    <View style={[styles.badge, { backgroundColor: color + '1F' }]}>
       <Text style={[styles.badgeText, { color }]}>{TASK_STATUS_LABELS[status]}</Text>
     </View>
   );
@@ -44,7 +43,7 @@ export function StatusBadge({ status }: { status: TaskStatus }) {
 export function PriorityBadge({ priority }: { priority: TaskPriority }) {
   const color = priorityColors[priority];
   return (
-    <View style={[styles.badge, { backgroundColor: color + '26', borderColor: color }]}>
+    <View style={[styles.badge, { backgroundColor: color + '1F' }]}>
       <Text style={[styles.badgeText, { color }]}>{TASK_PRIORITY_LABELS[priority]}</Text>
     </View>
   );
@@ -53,7 +52,7 @@ export function PriorityBadge({ priority }: { priority: TaskPriority }) {
 export function ProgressBar({ progress }: { progress: number }) {
   const { theme } = useAppTheme();
   return (
-    <View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
+    <View style={[styles.progressTrack, { backgroundColor: theme.cardBorder }]}>
       <View
         style={[
           styles.progressFill,
@@ -77,32 +76,21 @@ export function PrimaryButton({
 }) {
   const { theme } = useAppTheme();
 
-  if (variant === 'accent') {
-    return (
-      <Pressable onPress={disabled ? undefined : onPress} disabled={disabled}>
-        {({ pressed }) => (
-          <LinearGradient
-            colors={gradients.gold}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[styles.button, { opacity: disabled ? 0.5 : pressed ? 0.85 : 1 }]}
-          >
-            <Text style={[styles.buttonText, { color: theme.accentText }]}>{label}</Text>
-          </LinearGradient>
-        )}
-      </Pressable>
-    );
-  }
+  const bg =
+    variant === 'accent' || variant === 'success'
+      ? theme.accent
+      : variant === 'danger'
+        ? theme.danger
+        : 'transparent';
+  const textColor = variant === 'outline' ? theme.text : theme.accentText;
 
-  const bg = variant === 'success' ? theme.success : variant === 'danger' ? theme.danger : 'transparent';
-  const textColor = variant === 'outline' ? theme.text : '#FFFFFF';
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, borderColor: theme.border, opacity: disabled ? 0.5 : pressed ? 0.8 : 1 },
+        { backgroundColor: bg, borderColor: theme.border, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
         variant === 'outline' && { borderWidth: 1 },
       ]}
     >
@@ -122,7 +110,7 @@ export function EmptyState({ message }: { message: string }) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 16,
   },
@@ -134,13 +122,14 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     borderRadius: 999,
-    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   progressTrack: {
     height: 8,
@@ -153,7 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   button: {
-    borderRadius: 12,
+    borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',

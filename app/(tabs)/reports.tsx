@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { HorizontalBarRow, TrendBarChart } from '../../src/components/Charts';
+import { DonutChart, DonutLegend, HorizontalBarRow, TrendLineChart } from '../../src/components/Charts';
 import { Card, SectionTitle } from '../../src/components/ui';
+import { priorityColors } from '../../src/theme/colors';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
 
@@ -76,6 +77,15 @@ export default function ReportsScreen() {
     return days;
   }, [myDailySaves]);
 
+  const donutColors = [priorityColors.high, priorityColors.medium, priorityColors.critical, priorityColors.low];
+  const categoryDonutData = useMemo(
+    () =>
+      categoryStats
+        .slice(0, 4)
+        .map(([category, stat], i) => ({ label: category, value: stat.total, color: donutColors[i % donutColors.length] })),
+    [categoryStats]
+  );
+
   const failedTasks = tasks.filter((t) => t.status === 'failed');
 
   const teamCompletion = useMemo(() => {
@@ -140,7 +150,7 @@ export default function ReportsScreen() {
       <View style={styles.section}>
         <SectionTitle>7 Günlük Başarı Trendi</SectionTitle>
         <Card>
-          <TrendBarChart data={last7Days} />
+          <TrendLineChart data={last7Days} />
         </Card>
       </View>
 
@@ -155,6 +165,14 @@ export default function ReportsScreen() {
           <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4 }}>
             En çok ertelenen kategori: <Text style={{ color: theme.warning, fontWeight: '700' }}>{mostPostponedCategory[0]}</Text>
           </Text>
+        )}
+        {categoryDonutData.length > 0 && (
+          <Card style={styles.donutRow}>
+            <DonutChart data={categoryDonutData} />
+            <View style={{ flex: 1 }}>
+              <DonutLegend data={categoryDonutData} />
+            </View>
+          </Card>
         )}
         {categoryStats.length === 0 ? (
           <Text style={{ color: theme.textMuted, marginTop: 6 }}>Henüz görev yok.</Text>
@@ -247,5 +265,12 @@ const styles = StyleSheet.create({
   section: {
     marginTop: 20,
     gap: 4,
+  },
+  donutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    marginTop: 6,
+    marginBottom: 14,
   },
 });

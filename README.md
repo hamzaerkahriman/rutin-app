@@ -15,58 +15,65 @@ npm run android  # Android emülatöründe çalıştırır
 `.env` dosyasında `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 tanımlı olmalı (bkz. `.env.example`).
 
-## Görsel tasarım (frontend turu başladı)
+## Görsel tasarım — "Rutin Adaptive System" (v3)
 
-Backend tamamlandıktan sonra görsel/UX turuna geçildi:
+Uygulamanın tamamı, Google Stitch'te üretilen bir tasarım sistemine göre
+yeniden tasarlandı. Kaynak mockup'lar + tasarım tokenleri:
+`~/Desktop/claude/stitch_rutin_collaborative_task_tracker/` (5 ekran mockup'ı
++ `rutin_adaptive_system/DESIGN.md`). Önceki koyu lacivert/altın "Rolex"
+temasının (ve fotoğraf duvar kağıdı sisteminin) tamamen yerini aldı.
 
-- **Splash ekranı**: her mount'ta (`app/index.tsx`) rastgele bir arka plan
-  ([`src/theme/backgrounds.ts`](src/theme/backgrounds.ts) — 6 gerçek fotoğraf
-  + 10 gradient, toplam 16 varyasyon) ve Supabase'deki 150 motivasyon
-  cümlesinden rastgele biri seçilir. Alt kısımdaki ilerleme/CTA alanı
-  `expo-blur` ile gerçek cam efekti (glassmorphism) kullanır.
-- **Giriş/Kayıt ekranları** ([`src/components/AuthLayout.tsx`](src/components/AuthLayout.tsx)):
-  aynı rastgele arka plan havuzu üzerinde yarı saydam, bulanık (blur) bir kart
-  içinde form. Splash da auth ekranları da her mount'ta (dolayısıyla her
-  sayfa yenilemede/geçişte) yeniden rastgele seçim yapar — "döngü" davranışı
-  ek bir mekanizma gerektirmiyor, zaten `useState(() => pickRandomBackground())`
-  ile mount başına bir kez çalışıyor.
-- **Wallpaper fotoğrafları**: `assets/backgrounds/bg-01..06.jpg`. Kaynak:
-  `~/Desktop/claude/Wallpaper/*.jpg` — masaüstü boyutunda (2560x1600, 16:10
-  landscape) 13 fotoğraf, `sips -c 1600 900` ile ortadan 900x1600 portre'ye
-  kırpılıp seçilenler buraya kopyalandı. 13'ten 6'sı seçildi: uçtan uca yazı
-  içeren tasarımlar (ör. "MONEY", "YESTERDAY TODAY TOMORROW") portre kırpmada
-  kenarlardan kesiliyordu, temaya uymayan (Rick and Morty) ve düşük çözünürlüklü/
-  kompozisyonu bozulan (Tom and Jerry ekran görüntüsü) kaynaklar da elendi.
-  Yeni fotoğraf eklemek için: kaynağı `sips -c <height> <width>` ile portre
-  kırp (yazı/logo içeren görsellerde önce bir kırpma denemesi yapıp kenardan
-  kesilmediğini doğrula), `assets/backgrounds/`'a koy, `src/theme/backgrounds.ts`'e
-  bir `require()` satırı ekle — `AppBackground` bileşeni hem gradient hem
-  image türünü destekliyor.
+- **Felsefe**: "Disciplined Progress" — açık, minimalist, bol boşluklu,
+  "kurumsal modern" bir tema. Zümrüt yeşili (`#006C49`) hem marka vurgusu hem
+  "başarı/tamamlandı" rengi olarak kasıtlı olarak aynı (DESIGN.md: "Productive
+  Emerald, used exclusively for success states... and primary calls to
+  action"). Durum/öncelik renkleri bilinçli az sayıda tutuldu (yeşil/mavi-gri/
+  kırmızı/nötr gri) — yeni palette eski temadaki kadar çok ayrı ton yok, bu
+  DESIGN.md'nin kendi tercihi ("used sparingly... to ensure the interface
+  doesn't become visually noisy").
+- **Tema tokenleri** ([`src/theme/colors.ts`](src/theme/colors.ts)): `Theme`
+  tipinin alan isimleri (background/card/border/text/accent/...) hiç
+  değişmedi, sadece değerleri — bu sayede neredeyse tüm ekranlar (zaten
+  `theme.xxx` token'ları üzerinden stilleniyordu) **tek satır değişiklik
+  olmadan** otomatik yeni temaya geçti. Koyu mod da var (mockup'larda
+  gösterilmedi, MD3 dark-mode geleneğine göre aynı token ailesinden —
+  `primary-fixed-dim`/`primary-fixed` — türetildi); varsayılan artık `'light'`
+  (`ThemeProvider.tsx`), kullanıcı Profil'den Karanlık/Sistem'e geçebilir.
+- **Wallpaper/fotoğraf arka plan sistemi tamamen kaldırıldı**
+  (`AppBackground.tsx`, `theme/backgrounds.ts`, `assets/backgrounds/*.jpg`
+  silindi) — yeni tasarımda fotoğraf yok, düz `theme.background` zemin var.
+  `expo-blur` ve `expo-linear-gradient` de artık hiçbir yerde kullanılmadığı
+  için kaldırıldı.
+- **Yeni grafik bileşenleri** ([`src/components/Charts.tsx`](src/components/Charts.tsx)):
+  `react-native-svg` ile `CircularProgress` (dairesel ilerleme halkası —
+  Splash'te "Bugünkü İlerleme", Checklist'te "Gün Sonu Save" disiplin halkası),
+  `DonutChart`+`DonutLegend` (Raporlar'da kategori dağılımı), `TrendLineChart`
+  (Raporlar'da 7 günlük başarı trendi, yumuşak bezier eğrisi). Öncekinden
+  farklı olarak artık gerçek SVG kullanılıyor (View tabanlı bar chart'lar
+  yerine) — mockup'lardaki dairesel/donut/eğri grafikleri View'larla
+  yaklaşık olarak yapmak mümkün değildi.
+- **`TaskCard`** ([`src/components/TaskCard.tsx`](src/components/TaskCard.tsx)):
+  mockup'taki "Task Item" desenine göre yeniden yazıldı — öncelik rengiyle
+  boyalı sol kenarlık, dairesel checkbox, pill şeklinde öncelik rozeti,
+  checklist modundaki görevlerde "3/5" gibi adım sayacı.
+  `src/components/ui.tsx`'teki `Card`/`PrimaryButton`/`StatusBadge`/
+  `PriorityBadge`/`ProgressBar` da küçük border-radius + pill rozet + düz
+  (gradyansız) buton stiline göre güncellendi.
+- **Tab bar**: aktif sekme artık yuvarlak bir "pill" içinde ikon+etiket
+  gösteriyor (mockup'taki gibi), pasif sekmelerde sadece ikon var, etiket
+  metni yok. **Playwright ile test ederken dikkat**: bu yüzden pasif
+  sekmeler `getByText(label)` ile bulunamaz (metin DOM'da yok) — her
+  `TabIcon`'a `testID` eklendi (`tab-dashboard`, `tab-checklist`, `tab-tasks`,
+  `tab-team`, `tab-messages`, `tab-reports`, `profile-gear`), testlerde onları
+  kullan.
 - **Hedef platform notu**: uygulama nihayetinde iOS ve Android telefonlarda
-  kullanılacak. Şu ana kadarki görsel doğrulamalar `expo start --web` +
-  Playwright ile yapıldı — `expo-blur` gibi native modüllerin gerçek
-  cihazda/simülatörde de kontrol edilmesi gerekiyor (web'de çalışması
-  native'de de çalışacağının garantisi değil).
-- **Uygulama ikonu**: safir mavi zemin + altın "R" monogramı + ince altın
-  halka (Rolex esintili premium/lüks tema). `assets/icon.png` (iOS),
-  `assets/android-icon-foreground/background/monochrome.png` (Android
-  adaptive icon, 3 katman) ve `assets/favicon.png` (web) — hepsi tek bir SVG
-  kaynağından (`src/theme` dışında, scratchpad'te tutulan bir HTML/SVG
-  şablonundan) üretildi. Yeni bir logo/görsel gelirse bu 5 dosyanın yerine
-  konması yeterli.
-- **Uygulama içi ikonlar**: tab bar ve header'daki emoji ikonlar
-  `@expo/vector-icons` (Ionicons) ile değiştirildi — aktif sekme dolu
-  (filled), pasifler outline varyantında, tema rengiyle uyumlu.
-- **Uygulama geneli premium tema** ([`src/theme/colors.ts`](src/theme/colors.ts)):
-  koyu safir zemin (`#080F1E`), altın vurgu rengi (`#C9A227`, ikonla aynı),
-  fildişi metin. Durum renkleri (mavi/mor/amber — `in_progress`/`in_review`/vb.)
-  bilinçli olarak markanın altın rengiyle karışmasın diye ayrı tutuldu.
-  `PrimaryButton`'ın `accent` varyantı ve Splash/Auth submit butonları artık
-  altın gradyan (`gradients.gold`) kullanıyor, üzerindeki metin okunabilirlik
-  için koyu lacivert (`theme.accentText`) — düz beyaz metin gold zeminde
-  kontrast sorunu yaratıyordu, hepsi düzeltildi. Varsayılan tema artık
-  `'dark'` (sistem tercihine bakılmaksızın) çünkü bu palet koyu zeminde
-  tasarlandı; kullanıcı Profil'den Aydınlık/Sistem'e geçebilir.
+  kullanılacak (şu an web-first geliştiriliyor, kullanıcının kendi kararı).
+  Görsel doğrulamalar `expo start --web` + Playwright ile yapıldı (light +
+  dark mod, 390x844 mobil viewport) — gerçek cihazda henüz doğrulanmadı.
+- **Uygulama ikonu**: değiştirilmedi (hâlâ eski safir/altın "R" monogramı) —
+  bu tur sadece uygulama İÇİ ekranları kapsadı, ikon/splash-native-asset'ler
+  ayrı bir iş olarak bırakıldı, istenirse yeni yeşil temayla uyumlu bir ikon
+  turu ayrıca yapılabilir.
 
 ## Şu an nerede duruyoruz
 

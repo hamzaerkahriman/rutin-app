@@ -8,42 +8,55 @@ import { useAppTheme } from '../../src/theme/ThemeProvider';
 function TabIcon({
   name,
   nameFocused,
+  label,
   focused,
   badgeCount,
+  testID,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   nameFocused: keyof typeof Ionicons.glyphMap;
+  label: string;
   focused: boolean;
   badgeCount?: number;
+  testID?: string;
 }) {
   const { theme } = useAppTheme();
   return (
-    <View>
-      <Ionicons
-        name={focused ? nameFocused : name}
-        size={22}
-        color={focused ? theme.accent : theme.textMuted}
-      />
-      {!!badgeCount && (
-        <View
-          style={{
-            position: 'absolute',
-            top: -4,
-            right: -8,
-            backgroundColor: theme.danger,
-            borderRadius: 999,
-            minWidth: 14,
-            height: 14,
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingHorizontal: 2,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
-            {badgeCount > 9 ? '9+' : badgeCount}
-          </Text>
-        </View>
-      )}
+    <View
+      testID={testID}
+      style={[
+        { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+        focused && { backgroundColor: theme.accentLight },
+      ]}
+    >
+      <View>
+        <Ionicons
+          name={focused ? nameFocused : name}
+          size={20}
+          color={focused ? theme.accent : theme.textMuted}
+        />
+        {!!badgeCount && (
+          <View
+            style={{
+              position: 'absolute',
+              top: -4,
+              right: -8,
+              backgroundColor: theme.danger,
+              borderRadius: 999,
+              minWidth: 14,
+              height: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingHorizontal: 2,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </Text>
+          </View>
+        )}
+      </View>
+      {focused && <Text style={{ color: theme.accent, fontSize: 12, fontWeight: '700' }}>{label}</Text>}
     </View>
   );
 }
@@ -90,7 +103,7 @@ function ProfileHeaderButton() {
   const router = useRouter();
   const { theme } = useAppTheme();
   return (
-    <Pressable onPress={() => router.push('/profile')} hitSlop={12} style={{ paddingHorizontal: 8 }}>
+    <Pressable testID="profile-gear" onPress={() => router.push('/profile')} hitSlop={12} style={{ paddingHorizontal: 8 }}>
       <Ionicons name="settings-outline" size={20} color={theme.text} />
     </Pressable>
   );
@@ -116,16 +129,18 @@ export default function TabsLayout() {
         headerTintColor: theme.text,
         headerShadowVisible: false,
         headerRight: () => <HeaderRight />,
-        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
-        tabBarActiveTintColor: theme.accent,
-        tabBarInactiveTintColor: theme.textMuted,
+        tabBarShowLabel: false,
+        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border, height: 64 },
+        tabBarItemStyle: { paddingVertical: 6 },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ focused }) => <TabIcon name="home-outline" nameFocused="home" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon testID="tab-dashboard" name="home-outline" nameFocused="home" label="Home" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -133,7 +148,7 @@ export default function TabsLayout() {
         options={{
           title: 'Checklist',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="checkbox-outline" nameFocused="checkbox" focused={focused} />
+            <TabIcon testID="tab-checklist" name="checkbox-outline" nameFocused="checkbox" label="Checklist" focused={focused} />
           ),
         }}
       />
@@ -142,7 +157,7 @@ export default function TabsLayout() {
         options={{
           title: 'Görevler',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="file-tray-full-outline" nameFocused="file-tray-full" focused={focused} />
+            <TabIcon testID="tab-tasks" name="file-tray-full-outline" nameFocused="file-tray-full" label="Görevler" focused={focused} />
           ),
         }}
       />
@@ -150,7 +165,9 @@ export default function TabsLayout() {
         name="team"
         options={{
           title: 'Ekip',
-          tabBarIcon: ({ focused }) => <TabIcon name="people-outline" nameFocused="people" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon testID="tab-team" name="people-outline" nameFocused="people" label="Ekip" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -159,8 +176,10 @@ export default function TabsLayout() {
           title: 'Mesajlar',
           tabBarIcon: ({ focused }) => (
             <TabIcon
+              testID="tab-messages"
               name="chatbubbles-outline"
               nameFocused="chatbubbles"
+              label="Mesajlar"
               focused={focused}
               badgeCount={unreadMessageCount}
             />
@@ -172,7 +191,7 @@ export default function TabsLayout() {
         options={{
           title: 'Raporlar',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="bar-chart-outline" nameFocused="bar-chart" focused={focused} />
+            <TabIcon testID="tab-reports" name="bar-chart-outline" nameFocused="bar-chart" label="Raporlar" focused={focused} />
           ),
         }}
       />

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { CircularProgress } from '../../src/components/Charts';
 import { Card, PrimaryButton, ProgressBar, SectionTitle } from '../../src/components/ui';
 import { getAiDailyComment } from '../../src/lib/aiAssist';
 import { useAppStore } from '../../src/store/AppStore';
@@ -156,10 +157,25 @@ export default function ChecklistScreen() {
       <View style={styles.saveSection}>
         <SectionTitle>Gün Sonu Save</SectionTitle>
         {existingSave ? (
-          <Card style={{ gap: 8 }}>
-            <Text style={{ color: theme.text, fontWeight: '700' }}>
-              Bugün için save alındı — Başarı: %{existingSave.successRate}
-            </Text>
+          <Card style={{ gap: 14 }}>
+            <Text style={{ color: theme.text, fontWeight: '700', fontSize: 16 }}>Bugün için save alındı</Text>
+            <View style={styles.statRow}>
+              <View style={[styles.statBox, { backgroundColor: theme.success + '14', borderLeftColor: theme.success }]}>
+                <Text style={[styles.statBoxLabel, { color: theme.success }]}>TAMAMLANAN</Text>
+                <Text style={[styles.statBoxValue, { color: theme.success }]}>{existingSave.completedTasks}</Text>
+              </View>
+              <View style={[styles.statBox, { backgroundColor: theme.danger + '14', borderLeftColor: theme.danger }]}>
+                <Text style={[styles.statBoxLabel, { color: theme.danger }]}>BAŞARISIZ</Text>
+                <Text style={[styles.statBoxValue, { color: theme.danger }]}>{existingSave.failedTasks}</Text>
+              </View>
+              <View style={[styles.statBox, { backgroundColor: theme.textMuted + '14', borderLeftColor: theme.textMuted }]}>
+                <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>ERTELENEN</Text>
+                <Text style={[styles.statBoxValue, { color: theme.textMuted }]}>{existingSave.postponedTasks}</Text>
+              </View>
+            </View>
+            <View style={{ alignItems: 'center', marginVertical: 8 }}>
+              <CircularProgress progress={existingSave.successRate} size={140} sublabel="DİSİPLİN" />
+            </View>
             {existingSave.dailyNote ? (
               <Text style={{ color: theme.textMuted }}>{existingSave.dailyNote}</Text>
             ) : null}
@@ -237,6 +253,28 @@ const styles = StyleSheet.create({
   },
   saveSection: {
     gap: 10,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statBox: {
+    flex: 1,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statBoxLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  statBoxValue: {
+    fontSize: 20,
+    fontWeight: '800',
   },
   textarea: {
     borderWidth: 1,
