@@ -39,25 +39,33 @@ function RootStack() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: theme.surface },
-          headerTintColor: theme.text,
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: theme.background },
-        }}
-      >
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="task/create" options={{ title: 'Yeni Görev', presentation: 'modal' }} />
-        <Stack.Screen name="task/[id]/index" options={{ title: 'Görev Detayı' }} />
-        <Stack.Screen name="task/[id]/handoff" options={{ title: 'Görevi Devret', presentation: 'modal' }} />
-        <Stack.Screen name="profile" options={{ title: 'Profil / Ayarlar' }} />
-        <Stack.Screen name="notifications" options={{ title: 'Bildirimler' }} />
-        <Stack.Screen name="messages/[id]" options={{ title: 'Sohbet' }} />
-        <Stack.Screen name="team/[userId]" options={{ title: 'Profil' }} />
-      </Stack>
+      {/* Uygulama telefon genişliği için tasarlandı — geniş masaüstü
+          tarayıcılarda içeriği (header + tab bar dahil) mobil bir uygulama
+          gibi ortalanmış, sınırlı genişlikte tutuyoruz. Dar (telefon)
+          ekranlarda 480px sınırı zaten aşılmadığı için hiçbir etkisi yok. */}
+      <View style={{ flex: 1, backgroundColor: theme.surface }}>
+        <View style={{ flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: theme.surface },
+              headerTintColor: theme.text,
+              headerShadowVisible: false,
+              contentStyle: { backgroundColor: theme.background },
+            }}
+          >
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="task/create" options={{ title: 'Yeni Görev', presentation: 'modal' }} />
+            <Stack.Screen name="task/[id]/index" options={{ title: 'Görev Detayı' }} />
+            <Stack.Screen name="task/[id]/handoff" options={{ title: 'Görevi Devret', presentation: 'modal' }} />
+            <Stack.Screen name="profile" options={{ title: 'Profil / Ayarlar' }} />
+            <Stack.Screen name="notifications" options={{ title: 'Bildirimler' }} />
+            <Stack.Screen name="messages/[id]" options={{ title: 'Sohbet' }} />
+            <Stack.Screen name="team/[userId]" options={{ title: 'Profil' }} />
+          </Stack>
+        </View>
+      </View>
     </>
   );
 }

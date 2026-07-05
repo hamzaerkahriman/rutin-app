@@ -33,7 +33,7 @@ function TabIcon({
         <Ionicons
           name={focused ? nameFocused : name}
           size={20}
-          color={focused ? theme.accent : theme.textMuted}
+          color={focused ? theme.accent : theme.info}
         />
         {!!badgeCount && (
           <View

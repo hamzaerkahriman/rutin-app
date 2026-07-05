@@ -3,10 +3,13 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TaskCard } from '../../src/components/TaskCard';
-import { Card, elevatedCircleStyle, EmptyState, PrimaryButton, SectionTitle } from '../../src/components/ui';
+import { Card, elevatedCircleStyle, EmptyState, PrimaryButton, SectionTitle, SelectChip } from '../../src/components/ui';
 import { confirmAction, notify } from '../../src/lib/confirm';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
+import { INVITE_ROLE_LABELS, InviteRole } from '../../src/types';
+
+const EDITABLE_ROLES: InviteRole[] = ['admin', 'member', 'viewer'];
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
@@ -30,6 +33,7 @@ export default function TeamMemberProfileScreen() {
     loadMessages,
     sendMessage,
     removeMember,
+    updateMemberRole,
   } = useAppStore();
 
   const member = members.find((m) => m.userId === userId);
@@ -42,6 +46,7 @@ export default function TeamMemberProfileScreen() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: user?.name ?? 'Profil' });
@@ -87,6 +92,18 @@ export default function TeamMemberProfileScreen() {
     }
   };
 
+  const handleRoleChange = async (role: InviteRole) => {
+    if (role === member.role) return;
+    setUpdatingRole(true);
+    try {
+      await updateMemberRole(userId, role);
+    } catch (err) {
+      notify('Hata', err instanceof Error ? err.message : 'Rol güncellenemedi');
+    } finally {
+      setUpdatingRole(false);
+    }
+  };
+
   const handleRemove = async () => {
     const confirmed = await confirmAction(
       'Üyeyi çıkar',
@@ -125,8 +142,21 @@ export default function TeamMemberProfileScreen() {
         )}
 
         {canManage && !isSelf && member.role !== 'owner' && (
-          <View style={{ width: '100%', maxWidth: 220, marginTop: 20 }}>
+          <View style={{ width: '100%', maxWidth: 280, marginTop: 20 }}>
             <Text style={[styles.adminLabel, { color: theme.textMuted }]}>Yönetici İşlemleri</Text>
+            <Text style={[styles.roleFieldLabel, { color: theme.textMuted }]}>Rol</Text>
+            <View style={styles.roleChipRow}>
+              {EDITABLE_ROLES.map((r) => (
+                <SelectChip
+                  key={r}
+                  label={INVITE_ROLE_LABELS[r]}
+                  active={member.role === r}
+                  onPress={() => handleRoleChange(r)}
+                  compact
+                />
+              ))}
+            </View>
+            {updatingRole && <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 8 }}>Güncelleniyor...</Text>}
             <PrimaryButton
               label={removing ? 'Çıkarılıyor...' : 'Ekipten Çıkar'}
               variant="danger"
@@ -258,6 +288,18 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: 8,
     textAlign: 'center',
+  },
+  roleFieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  roleChipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
