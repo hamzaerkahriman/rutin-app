@@ -70,10 +70,13 @@ temasının (ve fotoğraf duvar kağıdı sisteminin) tamamen yerini aldı.
   kullanılacak (şu an web-first geliştiriliyor, kullanıcının kendi kararı).
   Görsel doğrulamalar `expo start --web` + Playwright ile yapıldı (light +
   dark mod, 390x844 mobil viewport) — gerçek cihazda henüz doğrulanmadı.
-- **Uygulama ikonu**: değiştirilmedi (hâlâ eski safir/altın "R" monogramı) —
-  bu tur sadece uygulama İÇİ ekranları kapsadı, ikon/splash-native-asset'ler
-  ayrı bir iş olarak bırakıldı, istenirse yeni yeşil temayla uyumlu bir ikon
-  turu ayrıca yapılabilir.
+- **Uygulama ikonu**: yeni temayla uyumlu hale getirildi — düz zümrüt yeşili
+  (`#006c49`) zemin + beyaz, düz (gradyansız/halkasız) "R" monogramı. Eski
+  safir/altın "Rolex" ikonunun yerini aldı. `assets/icon.png` (iOS/genel),
+  `assets/android-icon-foreground/background/monochrome.png` (Android
+  adaptive icon, 3 katman) ve `assets/favicon.png` (web) — hepsi tek bir SVG
+  şablonundan (`rsvg-convert` ile, `Helvetica Neue Bold` glif) üretildi.
+  `app.json`'daki `adaptiveIcon.backgroundColor` da `#006c49`'a güncellendi.
 
 ## Şu an nerede duruyoruz
 
