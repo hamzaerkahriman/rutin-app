@@ -1,8 +1,20 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { useAnimatedProgress } from '../hooks/useAnimatedProgress';
 import { priorityColors, statusColors } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, TaskPriority, TaskStatus } from '../types';
+
+// Kartların hafifçe belirip yükselerek gelmesi için sabit bir gölge + giriş
+// animasyonu — DESIGN.md'nin "ağır gölge değil, ince kenarlık" kuralına
+// uysun diye çok düşük opaklıkta tutuluyor, sadece ince bir derinlik hissi.
+const cardShadow: ViewStyle = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
+  shadowRadius: 6,
+  elevation: 2,
+};
 
 // Basılabilir öğelere "3D tuş" hissi veren gölge/basma stilleri — tek yerden
 // ayarlanabilsin diye tüm dolu-renkli butonlar (PrimaryButton ve app genelindeki
@@ -40,16 +52,28 @@ export function Screen({ children, style }: { children: React.ReactNode; style?:
 
 export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
   const { theme } = useAppTheme();
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(8)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.card,
         { backgroundColor: theme.card, borderColor: theme.cardBorder },
+        cardShadow,
+        { opacity, transform: [{ translateY }] },
         style,
       ]}
     >
       {children}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -78,14 +102,12 @@ export function PriorityBadge({ priority }: { priority: TaskPriority }) {
 
 export function ProgressBar({ progress }: { progress: number }) {
   const { theme } = useAppTheme();
+  const clamped = Math.min(100, Math.max(0, progress));
+  const animatedValue = useAnimatedProgress(clamped);
+  const width = animatedValue.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'], extrapolate: 'clamp' });
   return (
     <View style={[styles.progressTrack, { backgroundColor: theme.cardBorder }]}>
-      <View
-        style={[
-          styles.progressFill,
-          { width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: theme.success },
-        ]}
-      />
+      <Animated.View style={[styles.progressFill, { width, backgroundColor: theme.success }]} />
     </View>
   );
 }

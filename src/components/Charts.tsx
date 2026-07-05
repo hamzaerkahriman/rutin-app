@@ -1,6 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { useAnimatedProgress } from '../hooks/useAnimatedProgress';
 import { useAppTheme } from '../theme/ThemeProvider';
 
 // "Rutin Adaptive System" (Stitch tasarımı) grafik bileşenleri —
@@ -26,8 +27,15 @@ export function CircularProgress({
   const clamped = Math.max(0, Math.min(100, progress));
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const dashoffset = circumference * (1 - clamped / 100);
   const ringColor = color ?? theme.accent;
+
+  const animatedValue = useAnimatedProgress(clamped);
+  const [displayed, setDisplayed] = useState(0);
+  useEffect(() => {
+    const id = animatedValue.addListener(({ value }) => setDisplayed(value));
+    return () => animatedValue.removeListener(id);
+  }, [animatedValue]);
+  const dashoffset = circumference * (1 - Math.max(0, Math.min(100, displayed)) / 100);
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -53,7 +61,7 @@ export function CircularProgress({
         />
       </Svg>
       <View style={styles.ringCenter}>
-        <Text style={[styles.ringLabel, { color: ringColor }]}>{label ?? `${Math.round(clamped)}%`}</Text>
+        <Text style={[styles.ringLabel, { color: ringColor }]}>{label ?? `${Math.round(displayed)}%`}</Text>
         {sublabel && <Text style={[styles.ringSublabel, { color: theme.textMuted }]}>{sublabel}</Text>}
       </View>
     </View>
@@ -183,6 +191,8 @@ export function HorizontalBarRow({
 }) {
   const { theme } = useAppTheme();
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const animatedValue = useAnimatedProgress(Math.max(percent, 2));
+  const width = animatedValue.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'], extrapolate: 'clamp' });
   return (
     <View style={{ gap: 6 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -190,7 +200,7 @@ export function HorizontalBarRow({
         <Text style={{ color: theme.textMuted, fontSize: 12 }}>{rightLabel ?? `${completed}/${total}`}</Text>
       </View>
       <View style={[styles.barTrack, { backgroundColor: theme.cardBorder }]}>
-        <View style={[styles.barFill, { width: `${Math.max(percent, 2)}%`, backgroundColor: theme.accent }]} />
+        <Animated.View style={[styles.barFill, { width, backgroundColor: theme.accent }]} />
       </View>
     </View>
   );
