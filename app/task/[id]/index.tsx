@@ -114,6 +114,20 @@ export default function TaskDetailScreen() {
     }
   };
 
+  const handleComplete = async () => {
+    const confirmed = await confirmAction(
+      'Görevi tamamla',
+      `"${task.title}" görevini tamamlandı olarak işaretlemek istediğine emin misin?`,
+      'Tamamla'
+    );
+    if (!confirmed) return;
+    updateTaskStatus(task.id, 'completed');
+  };
+
+  const handleReopen = () => {
+    updateTaskStatus(task.id, 'pending');
+  };
+
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
     setAddingSubtask(true);
@@ -448,25 +462,25 @@ export default function TaskDetailScreen() {
             </Text>
           </Card>
         )
-      ) : (
-        !isTerminal && (
-          <View style={styles.actionsRow}>
-            <View style={{ flex: 1 }}>
-              <PrimaryButton
-                label="Devret"
-                variant="outline"
-                onPress={() => router.push(`/task/${task.id}/handoff`)}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <PrimaryButton
-                label="Tamamla"
-                variant="success"
-                onPress={() => updateTaskStatus(task.id, 'completed')}
-              />
-            </View>
+      ) : isTerminal ? (
+        <View style={styles.actionsRow}>
+          <View style={{ flex: 1 }}>
+            <PrimaryButton label="Geri Aç" variant="outline" onPress={handleReopen} />
           </View>
-        )
+        </View>
+      ) : (
+        <View style={styles.actionsRow}>
+          <View style={{ flex: 1 }}>
+            <PrimaryButton
+              label="Devret"
+              variant="outline"
+              onPress={() => router.push(`/task/${task.id}/handoff`)}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <PrimaryButton label="Tamamla" variant="success" onPress={handleComplete} />
+          </View>
+        </View>
       )}
     </ScrollView>
   );

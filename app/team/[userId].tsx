@@ -3,7 +3,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { TaskCard } from '../../src/components/TaskCard';
-import { Card, elevatedCircleStyle, EmptyState, PrimaryButton, SectionTitle, SelectChip } from '../../src/components/ui';
+import { Card, elevatedCircleStyle, EmptyState, noSelectStyle, PrimaryButton, SectionTitle, SelectChip } from '../../src/components/ui';
 import { confirmAction, notify } from '../../src/lib/confirm';
 import { useAppStore } from '../../src/store/AppStore';
 import { useAppTheme } from '../../src/theme/ThemeProvider';
@@ -191,7 +191,7 @@ export default function TeamMemberProfileScreen() {
           ) : (
             <Card style={{ marginBottom: 24, gap: 2, padding: 8 }}>
               {historyTasks.map((t) => (
-                <View key={t.id} style={styles.historyRow}>
+                <Pressable key={t.id} onPress={() => router.push(`/task/${t.id}`)} style={[styles.historyRow, noSelectStyle]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                     <Ionicons name="checkmark-circle" size={18} color={theme.success} />
                     <Text style={{ color: theme.textMuted, textDecorationLine: 'line-through', flex: 1 }} numberOfLines={1}>
@@ -199,7 +199,7 @@ export default function TeamMemberProfileScreen() {
                     </Text>
                   </View>
                   <Text style={{ color: theme.textMuted, fontSize: 11 }}>{t.dueDate ?? ''}</Text>
-                </View>
+                </Pressable>
               ))}
             </Card>
           )}
