@@ -71,7 +71,7 @@ export default function DashboardScreen() {
   const todayStr = new Date().toISOString().slice(0, 10);
 
   const stats = useMemo(() => {
-    const myTasks = tasks.filter((t) => t.assignedTo === currentUser.id);
+    const myTasks = tasks.filter((t) => t.assigneeIds.includes(currentUser.id));
     const todayTasks = myTasks.filter((t) => t.dueDate === todayStr);
     const completed = myTasks.filter((t) => t.status === 'completed').length;
     const postponed = myTasks.filter((t) => t.status === 'postponed').length;
@@ -85,7 +85,7 @@ export default function DashboardScreen() {
   }, [tasks, currentUser, todayStr]);
 
   const fromTeam = tasks
-    .filter((t) => t.assignedTo === currentUser.id && t.createdBy !== currentUser.id)
+    .filter((t) => t.assigneeIds.includes(currentUser.id) && t.createdBy !== currentUser.id)
     .slice(0, 3);
 
   return (

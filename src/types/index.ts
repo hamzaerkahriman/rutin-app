@@ -52,6 +52,7 @@ export interface WorkspaceMember {
   userId: string;
   role: WorkspaceRole;
   joinedAt: string;
+  lastActiveAt?: string;
 }
 
 export interface WorkspaceInvite {
@@ -98,6 +99,7 @@ export interface Task {
   progress: number;
   progressMode: ProgressMode;
   assignedTo?: string;
+  assigneeIds: string[];
   createdBy: string;
   startDate?: string;
   dueDate?: string;

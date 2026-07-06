@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, Pressable, Text, View } from 'react-native';
 import { sendInviteEmail } from '../lib/inviteEmail';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../providers/AuthProvider';
@@ -152,8 +152,19 @@ function mapMember(row: any): Member {
     userId: row.user_id,
     role: row.role,
     joinedAt: row.joined_at,
+    lastActiveAt: row.last_active_at ?? undefined,
     user: mapUser(row.user),
   };
+}
+
+// Bir üyenin "şu an aktif" sayılması için heartbeat penceresi — bundan daha
+// eski bir last_active_at, sekme kapatılmış/uygulama arka plana atılmış demektir.
+const PRESENCE_WINDOW_MS = 2 * 60 * 1000;
+const PRESENCE_HEARTBEAT_MS = 45 * 1000;
+
+export function isRecentlyActive(lastActiveAt?: string): boolean {
+  if (!lastActiveAt) return false;
+  return Date.now() - new Date(lastActiveAt).getTime() < PRESENCE_WINDOW_MS;
 }
 
 function mapInvite(row: any): WorkspaceInvite {
@@ -192,6 +203,7 @@ function mapTask(row: any): Task {
     progress: row.progress,
     progressMode: row.progress_mode,
     assignedTo: row.assigned_to ?? undefined,
+    assigneeIds: ((row.assignees ?? []) as any[]).map((a) => a.user_id),
     createdBy: row.created_by,
     startDate: row.start_date ?? undefined,
     dueDate: row.due_date ?? undefined,
@@ -328,7 +340,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
     const { data: taskRows } = await supabase
       .from('tasks')
-      .select('*, checklist:task_checklists(*)')
+      .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: false });
     const mappedTasks = (taskRows ?? []).map(mapTask);
@@ -539,6 +551,13 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     conversationsRef.current = conversations;
   }, [conversations]);
 
+  // workspace_members realtime callback'i heartbeat güncellemelerinde
+  // gereksiz bir `users` sorgusu atmamak için mevcut üyeyi ref'ten okur.
+  const membersRef = useRef<Member[]>([]);
+  useEffect(() => {
+    membersRef.current = members;
+  }, [members]);
+
   // Aktif workspace'e ait canlı senkronizasyon: görev, checklist, not, devir,
   // üye ve davet değişiklikleri diğer açık oturumlara anında yansır.
   useEffect(() => {
@@ -556,7 +575,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         }
         supabase
           .from('tasks')
-          .select('*, checklist:task_checklists(*)')
+          .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
           .eq('id', payload.new.id)
           .maybeSingle()
           .then(
@@ -581,7 +600,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (!tasksRef.current.some((t) => t.id === row.task_id)) return;
         supabase
           .from('tasks')
-          .select('*, checklist:task_checklists(*)')
+          .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
           .eq('id', row.task_id)
           .maybeSingle()
           .then(
@@ -591,6 +610,28 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
               setTasks((prev) => prev.map((t) => (t.id === row.task_id ? mapped : t)));
             },
             (err) => console.error('[Rutin] realtime checklist güncellemesi alınamadı:', err)
+          );
+      }
+    );
+
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'task_assignees' },
+      (payload: any) => {
+        const row = payload.new ?? payload.old;
+        if (!tasksRef.current.some((t) => t.id === row.task_id)) return;
+        supabase
+          .from('tasks')
+          .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
+          .eq('id', row.task_id)
+          .maybeSingle()
+          .then(
+            ({ data }) => {
+              if (!data) return;
+              const mapped = mapTask(data);
+              setTasks((prev) => prev.map((t) => (t.id === row.task_id ? mapped : t)));
+            },
+            (err) => console.error('[Rutin] realtime atanan kişi güncellemesi alınamadı:', err)
           );
       }
     );
@@ -655,6 +696,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const row = payload.new;
+        // Heartbeat (last_active_at) her ~45sn'de bir bu event'i tetikliyor —
+        // üye zaten yerelde varsa gereksiz bir `users` sorgusu atmadan sadece
+        // değişen alanları (rol/last_active_at) güncelliyoruz.
+        const existing = membersRef.current.find((m) => m.id === row.id);
+        if (existing) {
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.id === row.id
+                ? { ...m, role: row.role, joinedAt: row.joined_at, lastActiveAt: row.last_active_at ?? undefined }
+                : m
+            )
+          );
+          return;
+        }
         supabase
           .from('users')
           .select('*')
@@ -669,6 +724,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
                 userId: row.user_id,
                 role: row.role,
                 joinedAt: row.joined_at,
+                lastActiveAt: row.last_active_at ?? undefined,
                 user: mapUser(userRow),
               };
               setMembers((prev) => {
@@ -737,6 +793,37 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       supabase.removeChannel(channel);
     };
   }, [activeWorkspaceId]);
+
+  // "Şu an aktif" göstergesi: uygulama ön plandayken kendi last_active_at'imizi
+  // periyodik olarak günceller (heartbeat). Admin ekip ekranında son birkaç
+  // dakika içinde heartbeat atan üyeler "aktif" gösterilir (bkz. team.tsx).
+  useEffect(() => {
+    if (!activeWorkspaceId || !currentUser) return;
+
+    const ping = () => {
+      if (AppState.currentState !== 'active') return;
+      supabase
+        .from('workspace_members')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('workspace_id', activeWorkspaceId)
+        .eq('user_id', currentUser.id)
+        .then(
+          () => {},
+          (err) => console.error('[Rutin] presence heartbeat gönderilemedi:', err)
+        );
+    };
+
+    ping();
+    const interval = setInterval(ping, PRESENCE_HEARTBEAT_MS);
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') ping();
+    });
+
+    return () => {
+      clearInterval(interval);
+      appStateSub.remove();
+    };
+  }, [activeWorkspaceId, currentUser]);
 
   // Bana (e-postama) gelen davetler — hangi workspace'den geldiğine
   // bakmaksızın, oturum boyunca dinlenir (aktif workspace'e bağlı değil).
@@ -835,6 +922,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const createTask = useCallback(
     async (input: Partial<Task> & { title: string }) => {
       if (!workspace.id || !currentUser) throw new Error('Workspace hazır değil');
+      // Grup çalışması: birden fazla kişi seçilebilir. `assigned_to` geriye
+      // dönük uyumluluk için hep ilk seçilen kişi ("birincil atanan") olur —
+      // mevcut bildirim/devir/RLS mantığı bu kolona göre kurulu; tam liste
+      // ayrıca task_assignees tablosuna yazılır.
+      const assigneeIds =
+        input.assigneeIds && input.assigneeIds.length > 0
+          ? input.assigneeIds
+          : [input.assignedTo ?? currentUser.id];
+      const primaryAssignee = assigneeIds[0];
+
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -847,7 +944,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           priority: input.priority ?? 'medium',
           progress: 0,
           progress_mode: input.progressMode ?? 'manual',
-          assigned_to: input.assignedTo ?? currentUser.id,
+          assigned_to: primaryAssignee,
           created_by: currentUser.id,
           start_date: input.startDate ?? null,
           due_date: input.dueDate ?? null,
@@ -857,7 +954,13 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error || !data) throw new Error(error?.message ?? 'Görev oluşturulamadı');
-      const task = mapTask(data);
+
+      const { error: assigneesError } = await supabase
+        .from('task_assignees')
+        .insert(assigneeIds.map((userId) => ({ task_id: data.id, user_id: userId })));
+      if (assigneesError) throw new Error(assigneesError.message);
+
+      const task = mapTask({ ...data, assignees: assigneeIds.map((user_id) => ({ user_id })) });
       setTasks((prev) => [task, ...prev]);
       return task;
     },
@@ -927,7 +1030,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
           due_date: parent.dueDate ?? null,
           tags: [],
         })
-        .select('*, checklist:task_checklists(*)')
+        .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
         .single();
       if (error || !data) throw new Error(error?.message ?? 'Alt görev oluşturulamadı');
       const subtask = mapTask(data);
@@ -1158,7 +1261,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         .from('tasks')
         .update({ status: 'handed_off', updated_at: now })
         .eq('id', input.taskId)
-        .select('*, checklist:task_checklists(*)')
+        .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
         .single();
       if (taskError || !updatedTaskRow) throw new Error(taskError?.message ?? 'Görev güncellenemedi');
       const updatedTask = mapTask(updatedTaskRow);
@@ -1176,7 +1279,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setHandoffs((prev) => prev.map((h) => (h.id === handoffId ? mapHandoff(handoffRow) : h)));
       const { data: taskRow } = await supabase
         .from('tasks')
-        .select('*, checklist:task_checklists(*)')
+        .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
         .eq('id', handoffRow.task_id)
         .maybeSingle();
       if (taskRow) {
@@ -1195,7 +1298,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setHandoffs((prev) => prev.map((h) => (h.id === handoffId ? mapHandoff(handoffRow) : h)));
       const { data: taskRow } = await supabase
         .from('tasks')
-        .select('*, checklist:task_checklists(*)')
+        .select('*, checklist:task_checklists(*), assignees:task_assignees(user_id)')
         .eq('id', handoffRow.task_id)
         .maybeSingle();
       if (taskRow) {
@@ -1214,7 +1317,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     async (dailyNote: string) => {
       if (!currentUser || !workspace.id) throw new Error('Workspace hazır değil');
       const todayStr = new Date().toISOString().slice(0, 10);
-      const myTasks = tasks.filter((t) => t.assignedTo === currentUser.id && t.dueDate === todayStr);
+      const myTasks = tasks.filter((t) => t.assigneeIds.includes(currentUser.id) && t.dueDate === todayStr);
       const completedTasks = myTasks.filter((t) => t.status === 'completed').length;
       const failedTasks = myTasks.filter((t) => t.status === 'failed').length;
       const postponedTasks = myTasks.filter((t) => t.status === 'postponed').length;

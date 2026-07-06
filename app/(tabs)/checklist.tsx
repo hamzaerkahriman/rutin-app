@@ -62,7 +62,7 @@ export default function ChecklistScreen() {
   const todayStr = new Date().toISOString().slice(0, 10);
 
   const { todayItems, overdueItems } = useMemo(() => {
-    const mine = tasks.filter((t) => t.assignedTo === currentUser.id);
+    const mine = tasks.filter((t) => t.assigneeIds.includes(currentUser.id));
     return {
       todayItems: mine.filter((t) => t.dueDate === todayStr),
       overdueItems: mine.filter(

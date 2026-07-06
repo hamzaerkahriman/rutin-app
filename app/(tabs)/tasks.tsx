@@ -48,7 +48,7 @@ export default function TasksScreen() {
         case 'overdue':
           return t.dueDate && t.dueDate < todayStr && !['completed', 'cancelled', 'failed'].includes(t.status);
         case 'assigned_to_me':
-          return t.assignedTo === currentUser.id;
+          return t.assigneeIds.includes(currentUser.id);
         case 'created_by_me':
           return t.createdBy === currentUser.id;
         case 'handed_off':

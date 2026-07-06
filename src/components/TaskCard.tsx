@@ -12,7 +12,9 @@ export function TaskCard({ task }: { task: Task }) {
   const { theme } = useAppTheme();
   const { getUser } = useAppStore();
   const router = useRouter();
-  const assignee = task.assignedTo ? getUser(task.assignedTo) : undefined;
+  const assignees = task.assigneeIds.map((id) => getUser(id)).filter((u): u is NonNullable<typeof u> => !!u);
+  const assigneeLabel =
+    assignees.length > 1 ? `${assignees[0].name} +${assignees.length - 1}` : assignees[0]?.name;
   const priorityColor = priorityColors[task.priority];
   const isDone = task.status === 'completed';
 
@@ -71,9 +73,9 @@ export function TaskCard({ task }: { task: Task }) {
               </Text>
             </View>
           )}
-          {assignee && (
+          {assigneeLabel && (
             <Text style={{ color: theme.textMuted, fontSize: 12 }} numberOfLines={1}>
-              {assignee.name}
+              {assigneeLabel}
             </Text>
           )}
         </View>

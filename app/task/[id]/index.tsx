@@ -87,7 +87,7 @@ export default function TaskDetailScreen() {
     );
   }
 
-  const assignee = task.assignedTo ? getUser(task.assignedTo) : undefined;
+  const assignees = task.assigneeIds.map((uid) => getUser(uid)).filter((u): u is NonNullable<typeof u> => !!u);
   const creator = getUser(task.createdBy);
   const notes = getTaskNotes(task.id);
   const handoffs = getTaskHandoffs(task.id);
@@ -205,7 +205,10 @@ export default function TaskDetailScreen() {
       </View>
 
       <View style={styles.metaRow}>
-        <Text style={{ color: theme.textMuted, fontSize: 13 }}>Atanan: {assignee?.name ?? '—'}</Text>
+        <Text style={{ color: theme.textMuted, fontSize: 13 }}>
+          {assignees.length > 1 ? 'Ekip: ' : 'Atanan: '}
+          {assignees.length > 0 ? assignees.map((a) => a.name).join(', ') : '—'}
+        </Text>
         <Text style={{ color: theme.textMuted, fontSize: 13 }}>Son tarih: {task.dueDate ?? '—'}</Text>
       </View>
 

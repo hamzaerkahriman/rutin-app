@@ -33,7 +33,7 @@ export default function SplashScreen() {
   }, []);
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const myTodayTasks = tasks.filter((t) => t.assignedTo === currentUser.id && t.dueDate === todayStr);
+  const myTodayTasks = tasks.filter((t) => t.assigneeIds.includes(currentUser.id) && t.dueDate === todayStr);
   const completed = myTodayTasks.filter((t) => t.status === 'completed').length;
   const progressPct = myTodayTasks.length ? Math.round((completed / myTodayTasks.length) * 100) : 0;
 

@@ -18,7 +18,7 @@ export default function CreateTaskScreen() {
   const [category, setCategory] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
-  const [assignedTo, setAssignedTo] = useState(currentUser.id);
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([currentUser.id]);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
 
@@ -26,7 +26,18 @@ export default function CreateTaskScreen() {
   const isViewer = myRole === 'viewer';
 
   const [submitting, setSubmitting] = useState(false);
-  const canSubmit = title.trim().length > 0 && !submitting && !isViewer;
+  const canSubmit = title.trim().length > 0 && assigneeIds.length > 0 && !submitting && !isViewer;
+
+  const toggleAssignee = (userId: string) => {
+    setAssigneeIds((prev) => {
+      if (prev.includes(userId)) {
+        // En az bir kişi atanmış kalmalı — son kişiyi kaldırmaya izin verme.
+        if (prev.length === 1) return prev;
+        return prev.filter((id) => id !== userId);
+      }
+      return [...prev, userId];
+    });
+  };
 
   const handleAddTag = () => {
     const value = tagInput.trim();
@@ -52,7 +63,7 @@ export default function CreateTaskScreen() {
         category: category.trim() || undefined,
         priority,
         dueDate,
-        assignedTo,
+        assigneeIds,
         tags,
         progressMode: 'manual',
       });
@@ -143,15 +154,18 @@ export default function CreateTaskScreen() {
         style={[styles.input, { borderColor: theme.border, color: theme.text }]}
       />
 
-      <SectionTitle>Atanan Kişi</SectionTitle>
+      <SectionTitle>Atanan Kişi{assigneeIds.length > 1 ? ` · Grup Çalışması (${assigneeIds.length} kişi)` : ''}</SectionTitle>
+      <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: -8, marginBottom: 10 }}>
+        Birden fazla kişi seçerek görevi bir grup çalışması haline getirebilirsin.
+      </Text>
       <View style={styles.chipRow}>
         {members.map((m) => (
           <SelectChip
             key={m.userId}
             testID={`create-assignee-${m.userId}`}
             label={m.user.name}
-            active={assignedTo === m.userId}
-            onPress={() => setAssignedTo(m.userId)}
+            active={assigneeIds.includes(m.userId)}
+            onPress={() => toggleAssignee(m.userId)}
           />
         ))}
       </View>

@@ -73,7 +73,7 @@ export default function TeamMemberProfileScreen() {
   const chatMessages = conversationId ? getConversationMessages(conversationId) : [];
   const lastMessage = chatMessages[chatMessages.length - 1];
 
-  const memberTasks = tasks.filter((t) => t.assignedTo === userId);
+  const memberTasks = tasks.filter((t) => t.assigneeIds.includes(userId));
   const activeTasks = memberTasks.filter((t) => !['completed', 'cancelled', 'failed'].includes(t.status));
   const historyTasks = memberTasks.filter((t) => t.status === 'completed').slice(0, 6);
 
